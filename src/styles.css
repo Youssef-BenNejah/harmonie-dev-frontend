@@ -1,0 +1,251 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 6px);
+  --radius-2xl: calc(var(--radius) + 12px);
+  --radius-3xl: calc(var(--radius) + 20px);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ice: var(--ice);
+  --color-sky: var(--sky);
+  --color-ocean: var(--ocean);
+  --color-navy: var(--navy);
+  --color-midnight: var(--midnight);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --shadow-glass: 0 18px 50px -20px oklch(0.28 0.13 262 / 0.45);
+  --shadow-lift: 0 28px 60px -24px oklch(0.28 0.13 262 / 0.55);
+  --shadow-glow: 0 0 0 1px oklch(0.55 0.17 255 / 0.35), 0 12px 32px -12px oklch(0.55 0.17 255 / 0.65);
+}
+
+:root {
+  --radius: 1rem;
+
+  /* Deep-ocean palette */
+  --ice: oklch(0.926 0.031 246.7);
+  --sky: oklch(0.688 0.111 246.9);
+  --ocean: oklch(0.522 0.176 259.4);
+  --navy: oklch(0.317 0.135 265.9);
+  --midnight: oklch(0.196 0.077 269.3);
+
+  --background: oklch(0.982 0.008 246);
+  --foreground: var(--midnight);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--midnight);
+  --popover: oklch(1 0 0);
+  --popover-foreground: var(--midnight);
+  --primary: var(--ocean);
+  --primary-foreground: oklch(0.985 0.005 247);
+  --secondary: var(--ice);
+  --secondary-foreground: var(--navy);
+  --muted: oklch(0.958 0.014 247);
+  --muted-foreground: oklch(0.53 0.048 259);
+  --accent: var(--ice);
+  --accent-foreground: var(--navy);
+  --destructive: oklch(0.585 0.216 22);
+  --destructive-foreground: oklch(0.99 0 0);
+  --success: oklch(0.63 0.13 165);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.75 0.15 72);
+  --warning-foreground: oklch(0.2 0.03 70);
+  --border: oklch(0.895 0.024 248);
+  --input: oklch(0.895 0.024 248);
+  --ring: var(--ocean);
+
+  --chart-1: var(--ocean);
+  --chart-2: var(--sky);
+  --chart-3: var(--navy);
+  --chart-4: oklch(0.79 0.07 240);
+  --chart-5: oklch(0.62 0.09 210);
+
+  --sidebar: var(--navy);
+  --sidebar-foreground: oklch(0.93 0.02 247);
+  --sidebar-primary: var(--ocean);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.38 0.12 265);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(1 0 0 / 12%);
+  --sidebar-ring: var(--sky);
+
+  --glass-bg: oklch(1 0 0 / 72%);
+  --glass-border: oklch(1 0 0 / 60%);
+  --app-gradient: radial-gradient(
+      1200px 600px at 8% -10%,
+      oklch(0.926 0.031 246.7 / 0.9),
+      transparent 60%
+    ),
+    radial-gradient(900px 500px at 100% 0%, oklch(0.688 0.111 246.9 / 0.28), transparent 55%),
+    radial-gradient(1000px 700px at 50% 120%, oklch(0.522 0.176 259.4 / 0.18), transparent 60%);
+}
+
+.dark {
+  --background: var(--midnight);
+  --foreground: oklch(0.95 0.014 247);
+  --card: oklch(0.25 0.09 267);
+  --card-foreground: oklch(0.96 0.01 247);
+  --popover: oklch(0.25 0.09 267);
+  --popover-foreground: oklch(0.96 0.01 247);
+  --primary: var(--sky);
+  --primary-foreground: oklch(0.16 0.06 268);
+  --secondary: oklch(0.29 0.1 266);
+  --secondary-foreground: oklch(0.95 0.01 247);
+  --muted: oklch(0.28 0.08 267);
+  --muted-foreground: oklch(0.75 0.04 250);
+  --accent: oklch(0.32 0.11 265);
+  --accent-foreground: oklch(0.97 0 0);
+  --destructive: oklch(0.66 0.19 22);
+  --success: oklch(0.7 0.13 165);
+  --warning: oklch(0.8 0.14 75);
+  --border: oklch(1 0 0 / 12%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: var(--sky);
+
+  --sidebar: var(--midnight);
+  --sidebar-foreground: oklch(0.92 0.02 247);
+  --sidebar-accent: oklch(0.3 0.1 266);
+
+  --glass-bg: oklch(0.28 0.09 267 / 0.6);
+  --glass-border: oklch(1 0 0 / 12%);
+  --app-gradient: radial-gradient(1100px 600px at 5% -10%, oklch(0.317 0.135 265.9 / 0.85), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, oklch(0.522 0.176 259.4 / 0.35), transparent 55%),
+    radial-gradient(900px 700px at 50% 120%, oklch(0.688 0.111 246.9 / 0.14), transparent 60%);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    /* Native-app feel on mobile: no rubber-band gray flash, no blue tap flash, no accidental text selection on taps. */
+    overscroll-behavior-y: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: var(--color-background);
+    background-image: var(--app-gradient);
+    background-attachment: fixed;
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
+    touch-action: manipulation;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@utility glass {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(18px) saturate(140%);
+  box-shadow: var(--shadow-glass);
+}
+
+@utility lift {
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lift);
+  }
+}
+
+@utility text-gradient-ocean {
+  background: linear-gradient(100deg, var(--navy), var(--ocean) 55%, var(--sky));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility surface-ocean {
+  background: linear-gradient(160deg, var(--navy), var(--midnight));
+}
+
+/* Safe-area helpers so the fixed header/bottom-nav clear the iPhone notch and home indicator. */
+@utility pt-safe-header {
+  padding-top: calc(env(safe-area-inset-top) + 0.75rem);
+}
+
+@utility pb-safe-nav {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 0.5rem);
+}
+
+@keyframes wave-drift {
+  0% {
+    transform: translateX(0) translateZ(0);
+  }
+  100% {
+    transform: translateX(-50%) translateZ(0);
+  }
+}
+
+@keyframes float-soft {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-wave {
+  animation: wave-drift 18s linear infinite;
+}
+
+.animate-float {
+  animation: float-soft 7s ease-in-out infinite;
+}
