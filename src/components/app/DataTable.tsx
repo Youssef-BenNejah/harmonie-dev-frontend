@@ -67,6 +67,15 @@ export function DataTable<T extends { id: string }>({
     onSelectionChange?.(next);
   };
 
+  const allFilteredSelected = filtered.length > 0 && filtered.every((r) => selected.includes(r.id));
+  const someFilteredSelected = filtered.some((r) => selected.includes(r.id));
+
+  const toggleAll = () => {
+    const next = allFilteredSelected ? [] : filtered.map((r) => r.id);
+    setSelected(next);
+    onSelectionChange?.(next);
+  };
+
   return (
     <div className="glass rounded-2xl">
       <div className="flex flex-wrap items-center gap-3 border-b border-border/60 p-4">
@@ -90,7 +99,20 @@ export function DataTable<T extends { id: string }>({
         <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="text-left text-xs tracking-wide text-muted-foreground uppercase">
-              {selectable ? <th className="w-10 px-4 py-3" /> : null}
+              {selectable ? (
+                <th className="w-10 px-4 py-3">
+                  <input
+                    type="checkbox"
+                    className="size-4 accent-[var(--ocean)]"
+                    checked={allFilteredSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = !allFilteredSelected && someFilteredSelected;
+                    }}
+                    onChange={toggleAll}
+                    aria-label="Tout sélectionner"
+                  />
+                </th>
+              ) : null}
               {columns.map((c) => (
                 <th key={c.key} className={cn("px-4 py-3 font-semibold", c.className)}>
                   {c.sortable ? (

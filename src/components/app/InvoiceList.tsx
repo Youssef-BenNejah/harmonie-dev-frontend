@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDate, formatMoney, type InvoiceStatus } from "@/lib/mock-data";
 import {
@@ -24,6 +25,7 @@ import {
   downloadInvoicesSummaryPdf,
   downloadInvoicesZip,
   duplicateInvoiceApi,
+  listCurrencies,
   listInvoices,
   sendInvoiceByEmail,
   type ApiInvoice,
@@ -46,15 +48,29 @@ export function InvoiceListPage({
 }) {
   const queryClient = useQueryClient();
   const { data: allInvoices = [], isLoading, isError } = useQuery({ queryKey: ["invoices"], queryFn: listInvoices });
+  const { data: currencies = [] } = useQuery({ queryKey: ["currencies"], queryFn: listCurrencies });
   const rows = useMemo(() => allInvoices.filter((i) => i.type === type), [allInvoices, type]);
   const [statutFilter, setStatutFilter] = useState<string>("tous");
+  const [currencyFilter, setCurrencyFilter] = useState<string>("toutes");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [payingInvoice, setPayingInvoice] = useState<ApiInvoice | null>(null);
 
   const filtered = useMemo(
-    () => (statutFilter === "tous" ? rows : rows.filter((r) => r.status === statutFilter)),
-    [rows, statutFilter],
+    () =>
+      rows
+        .filter((r) => statutFilter === "tous" || r.status === statutFilter)
+        .filter((r) => currencyFilter === "toutes" || r.currency.code === currencyFilter)
+        .filter((r) => !dateFrom || r.date >= dateFrom)
+        .filter((r) => !dateTo || r.date <= dateTo),
+    [rows, statutFilter, currencyFilter, dateFrom, dateTo],
   );
+
+  const currenciesInUse = useMemo(() => {
+    const codes = new Set(rows.map((r) => r.currency.code));
+    return currencies.filter((c) => codes.has(c.code));
+  }, [rows, currencies]);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["invoices"] });
   const onError = (err: unknown, fallback: string) => {
@@ -248,19 +264,64 @@ export function InvoiceListPage({
         onSelectionChange={setSelected}
         emptyTitle={isLoading ? "Chargement…" : "Aucune facture trouvée"}
         toolbar={
-          <Select value={statutFilter} onValueChange={setStatutFilter}>
-            <SelectTrigger className="h-10 w-[180px] rounded-xl border-border/70 bg-background/60">
-              <SelectValue placeholder="Statut" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="tous">Tous les statuts</SelectItem>
-              {statuts.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={statutFilter} onValueChange={setStatutFilter}>
+              <SelectTrigger className="h-10 w-[160px] rounded-xl border-border/70 bg-background/60">
+                <SelectValue placeholder="Statut" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="tous">Tous les statuts</SelectItem>
+                {statuts.map((s) => (
+                  <SelectItem key={s} value={s}>
+                    {s}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={currencyFilter} onValueChange={setCurrencyFilter}>
+              <SelectTrigger className="h-10 w-[130px] rounded-xl border-border/70 bg-background/60">
+                <SelectValue placeholder="Devise" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="toutes">Toutes devises</SelectItem>
+                {currenciesInUse.map((c) => (
+                  <SelectItem key={c.code} value={c.code}>
+                    {c.code}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Input
+              type="date"
+              value={dateFrom}
+              onChange={(e) => setDateFrom(e.target.value)}
+              max={dateTo || undefined}
+              className="h-10 w-[150px] rounded-xl border-border/70 bg-background/60"
+              aria-label="Du"
+            />
+            <Input
+              type="date"
+              value={dateTo}
+              onChange={(e) => setDateTo(e.target.value)}
+              min={dateFrom || undefined}
+              className="h-10 w-[150px] rounded-xl border-border/70 bg-background/60"
+              aria-label="Au"
+            />
+            {statutFilter !== "tous" || currencyFilter !== "toutes" || dateFrom || dateTo ? (
+              <Button
+                variant="ghost"
+                className="h-10 rounded-xl text-muted-foreground"
+                onClick={() => {
+                  setStatutFilter("tous");
+                  setCurrencyFilter("toutes");
+                  setDateFrom("");
+                  setDateTo("");
+                }}
+              >
+                Réinitialiser
+              </Button>
+            ) : null}
+          </div>
         }
       />
 
