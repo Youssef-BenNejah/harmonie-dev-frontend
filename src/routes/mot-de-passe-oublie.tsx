@@ -21,7 +21,7 @@ export const Route = createFileRoute("/mot-de-passe-oublie")({
   component: ForgotPassword,
 });
 
-const field = "h-11 rounded-xl border-white/20 bg-white/10 text-white placeholder:text-white/40";
+const field = "h-11 rounded-xl";
 
 function ForgotPassword() {
   const [step, setStep] = useState(1);
@@ -95,21 +95,21 @@ function ForgotPassword() {
               : undefined
       }
       footer={
-        <Link to="/login" className="font-semibold text-white underline-offset-4 hover:underline">
+        <Link to="/login" className="font-semibold text-ocean underline-offset-4 hover:underline">
           Retour à la connexion
         </Link>
       }
     >
       <div className="flex gap-2">
         {[1, 2, 3].map((s) => (
-          <span key={s} className={`h-1 flex-1 rounded-full ${step >= s ? "bg-sky" : "bg-white/20"}`} />
+          <span key={s} className={`h-1 flex-1 rounded-full ${step >= s ? "bg-ocean" : "bg-muted"}`} />
         ))}
       </div>
 
       {step === 1 ? (
         <form className="space-y-4" onSubmit={submitEmail}>
           <div className="space-y-2">
-            <Label className="text-white/80">Adresse e-mail</Label>
+            <Label>Adresse e-mail</Label>
             <Input
               type="email"
               required
@@ -134,7 +134,7 @@ function ForgotPassword() {
                   <InputOTPSlot
                     key={i}
                     index={i}
-                    className="size-12 rounded-xl border-white/25 bg-white/10 text-lg text-white transition-all data-[active=true]:border-sky data-[active=true]:ring-2 data-[active=true]:ring-sky/50"
+                    className="size-12 rounded-xl text-lg transition-all data-[active=true]:border-ocean data-[active=true]:ring-2 data-[active=true]:ring-ocean/30"
                   />
                 ))}
               </InputOTPGroup>
@@ -153,7 +153,7 @@ function ForgotPassword() {
       {step === 3 ? (
         <form className="space-y-4" onSubmit={submitNewPassword}>
           <div className="space-y-2">
-            <Label className="text-white/80">Nouveau mot de passe</Label>
+            <Label>Nouveau mot de passe</Label>
             <Input
               type="password"
               required
@@ -164,7 +164,7 @@ function ForgotPassword() {
             />
           </div>
           <div className="space-y-2">
-            <Label className="text-white/80">Confirmer</Label>
+            <Label>Confirmer</Label>
             <Input
               type="password"
               required
@@ -185,7 +185,7 @@ function ForgotPassword() {
           <span className="animate-float grid size-16 place-items-center rounded-full bg-success/20 text-success">
             <CheckCircle2 className="size-9" />
           </span>
-          <p className="text-sm text-white/80">Votre mot de passe a été réinitialisé avec succès.</p>
+          <p className="text-sm text-muted-foreground">Votre mot de passe a été réinitialisé avec succès.</p>
           <Button asChild className="mt-2 h-11 w-full rounded-xl bg-ocean hover:bg-ocean/90">
             <Link to="/login">Se connecter</Link>
           </Button>

@@ -24,13 +24,14 @@ function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("admin@harmonie-dev.tn");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const user = await login(email, password);
+      const user = await login(email, password, remember);
       toast.success("Connexion réussie", { description: `Bienvenue ${user.firstName ?? user.email}` });
       navigate({ to: user.role === "ADMIN" ? "/superadmin" : "/tableau-de-bord" });
     } catch (err) {
@@ -48,7 +49,7 @@ function Login() {
       footer={
         <>
           Pas encore de compte ?{" "}
-          <Link to="/rejoindre" className="font-semibold text-white underline-offset-4 hover:underline">
+          <Link to="/rejoindre" className="font-semibold text-ocean underline-offset-4 hover:underline">
             Demander l'accès
           </Link>
         </>
@@ -56,31 +57,31 @@ function Login() {
     >
       <form className="space-y-4" onSubmit={onSubmit}>
         <div className="space-y-2">
-          <Label className="text-white/80">Adresse e-mail</Label>
+          <Label>Adresse e-mail</Label>
           <Input
             type="email"
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="h-11 rounded-xl border-white/20 bg-white/10 text-white placeholder:text-white/40"
+            className="h-11 rounded-xl"
           />
         </div>
         <div className="space-y-2">
-          <Label className="text-white/80">Mot de passe</Label>
+          <Label>Mot de passe</Label>
           <Input
             type="password"
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="h-11 rounded-xl border-white/20 bg-white/10 text-white placeholder:text-white/40"
+            className="h-11 rounded-xl"
           />
         </div>
         <div className="flex items-center justify-between text-sm">
-          <label className="flex items-center gap-2 text-white/80">
-            <Checkbox className="border-white/40 data-[state=checked]:bg-sky data-[state=checked]:text-midnight" defaultChecked />
+          <label className="flex items-center gap-2 text-muted-foreground">
+            <Checkbox checked={remember} onCheckedChange={(v) => setRemember(v === true)} />
             Se souvenir de moi
           </label>
-          <Link to="/mot-de-passe-oublie" className="text-white/80 hover:text-white">
+          <Link to="/mot-de-passe-oublie" className="text-muted-foreground hover:text-navy">
             Mot de passe oublié ?
           </Link>
         </div>

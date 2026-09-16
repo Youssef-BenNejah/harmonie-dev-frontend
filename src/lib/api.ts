@@ -6,6 +6,7 @@ import { useSyncExternalStore } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8090/api/v1";
 const TOKEN_STORAGE_KEY = "harmonie-dev-access-token";
+const REMEMBER_KEY = "harmonie-dev-remember";
 
 type ApiEnvelope<T> = {
   success: boolean;
@@ -36,11 +37,31 @@ function extractErrorMessage(body: unknown, status: number): string {
   return envelope?.message ?? envelope?.detail ?? `Request failed (${status})`;
 }
 
+// "Remember me" decides where the access token lives: localStorage survives browser restarts,
+// sessionStorage is wiped when the tab/browser closes. The refresh cookie mirrors this same
+// choice server-side (see AuthController#setRefreshCookie), so the two stay consistent.
+function rememberPreference(): boolean {
+  try {
+    return localStorage.getItem(REMEMBER_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function setRememberPreference(remember: boolean) {
+  try {
+    if (remember) localStorage.setItem(REMEMBER_KEY, "1");
+    else localStorage.removeItem(REMEMBER_KEY);
+  } catch {
+    // ignore — falls back to sessionStorage-only behavior for this tab
+  }
+}
+
 let accessToken: string | null = readStoredToken();
 
 function readStoredToken(): string | null {
   try {
-    return sessionStorage.getItem(TOKEN_STORAGE_KEY);
+    return rememberPreference() ? localStorage.getItem(TOKEN_STORAGE_KEY) : sessionStorage.getItem(TOKEN_STORAGE_KEY);
   } catch {
     return null;
   }
@@ -53,8 +74,11 @@ export function getAccessToken() {
 export function setAccessToken(token: string | null) {
   accessToken = token;
   try {
-    if (token) sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
-    else sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+    const store = rememberPreference() ? localStorage : sessionStorage;
+    const other = rememberPreference() ? sessionStorage : localStorage;
+    if (token) store.setItem(TOKEN_STORAGE_KEY, token);
+    else store.removeItem(TOKEN_STORAGE_KEY);
+    other.removeItem(TOKEN_STORAGE_KEY);
   } catch {
     // sessionStorage unavailable (SSR, privacy mode) — in-memory token still works for this tab session.
   }
@@ -194,11 +218,12 @@ if (typeof window !== "undefined" && accessToken) {
     .catch(() => setAccessToken(null));
 }
 
-export async function login(email: string, password: string) {
+export async function login(email: string, password: string, rememberMe = false) {
   const data = await request<{ accessToken: string; user: ApiUser }>("/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, rememberMe }),
   });
+  setRememberPreference(rememberMe);
   setAccessToken(data.accessToken);
   setCurrentUser(data.user);
   return data.user;
@@ -210,6 +235,7 @@ export async function logout() {
   } finally {
     setAccessToken(null);
     setCurrentUser(null);
+    setRememberPreference(false);
   }
 }
 
