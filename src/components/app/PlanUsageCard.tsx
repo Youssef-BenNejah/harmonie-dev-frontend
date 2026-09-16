@@ -114,7 +114,7 @@ export function PlanFeatureLocked({ label }: { label: string }) {
         <Lock className="size-5" />
       </span>
       <div>
-        <p className="font-semibold">{label} n'est pas inclus dans votre plan</p>
+        <p className="font-semibold">{label} — non inclus dans votre plan</p>
         <p className="mt-1 text-sm text-muted-foreground">Passez à un plan supérieur pour débloquer cette fonctionnalité.</p>
       </div>
       <Button asChild className="rounded-xl">
