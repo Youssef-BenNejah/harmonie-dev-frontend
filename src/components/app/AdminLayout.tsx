@@ -4,7 +4,6 @@ import {
   Building2,
   ChevronDown,
   Coins,
-  CreditCard,
   Crown,
   FileMinus,
   FileText,
@@ -55,7 +54,6 @@ const nav = [
   { to: "/depenses", label: "Dépenses", icon: Wallet },
   { to: "/mon-entreprise", label: "Ma entreprise", icon: Settings2 },
   { to: "/rapports", label: "Rapports", icon: PieChart },
-  { to: "/abonnement", label: "Abonnement", icon: CreditCard },
 ] as const;
 
 const superAdminNav = [

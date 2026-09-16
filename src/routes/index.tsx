@@ -1,16 +1,23 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import {
   BarChart3,
+  Check,
   CheckCircle2,
   FileText,
   Receipt,
   ShieldCheck,
   Sparkles,
+  Star,
   Users,
   Wallet,
   Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { listPlans } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,6 +49,94 @@ const steps = [
   { title: "Recevez vos accès", desc: "Vos identifiants vous sont envoyés par e-mail, prêts à l'emploi." },
 ];
 
+function PricingSection() {
+  const { data: plans = [], isLoading } = useQuery({ queryKey: ["plans"], queryFn: listPlans });
+  const [annual, setAnnual] = useState(false);
+
+  if (!isLoading && plans.length === 0) return null;
+
+  return (
+    <div className="mt-16 sm:mt-24" id="tarifs">
+      <div className="mx-auto max-w-2xl text-center">
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 backdrop-blur">
+          <Sparkles className="size-3.5" /> Tarifs
+        </span>
+        <h2 className="mt-4 text-2xl font-semibold tracking-tight text-white sm:text-3xl lg:text-4xl">
+          Un plan pour chaque étape de votre activité
+        </h2>
+        <p className="mt-3 text-sm text-white/70 sm:text-base">
+          Commencez avec l'essai gratuit, passez au plan supérieur quand vous en avez besoin. Sans engagement.
+        </p>
+      </div>
+
+      <div className="mt-8 flex items-center justify-center gap-3">
+        <span className={cn("text-sm font-medium", !annual ? "text-white" : "text-white/50")}>Mensuel</span>
+        <Switch checked={annual} onCheckedChange={setAnnual} />
+        <span className={cn("flex items-center gap-1.5 text-sm font-medium", annual ? "text-white" : "text-white/50")}>
+          Annuel
+          <span className="rounded-full bg-success/20 px-2 py-0.5 text-xs font-semibold text-success">-17%</span>
+        </span>
+      </div>
+
+      {isLoading ? (
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-80 animate-pulse rounded-3xl border border-white/10 bg-white/5" />
+          ))}
+        </div>
+      ) : (
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {plans.map((p) => (
+            <div
+              key={p.id}
+              className={cn(
+                "relative flex flex-col rounded-3xl border p-6 backdrop-blur-xl transition-transform hover:-translate-y-1",
+                p.populaire ? "border-sky/60 bg-white/15 shadow-[0_20px_60px_-20px_rgba(79,163,222,0.5)]" : "border-white/15 bg-white/10",
+              )}
+            >
+              {p.populaire ? (
+                <span className="absolute -top-3 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-full bg-sky px-3 py-1 text-xs font-semibold text-midnight shadow-lg">
+                  <Star className="size-3" /> Le plus populaire
+                </span>
+              ) : null}
+              <h3 className="text-lg font-semibold text-white">{p.nom}</h3>
+              <p className="mt-1 text-sm text-white/60">{p.tagline}</p>
+              <p className="mt-5 flex items-baseline gap-1">
+                <span className="text-3xl font-bold text-white">
+                  {p.freeTrial ? "Gratuit" : `${annual ? p.prixAnnuel : p.prixMensuel} DT`}
+                </span>
+                {p.freeTrial ? null : <span className="text-sm text-white/60">/{annual ? "an" : "mois"}</span>}
+              </p>
+              {p.freeTrial && p.trialDurationDays ? (
+                <p className="mt-1 text-xs text-white/50">{p.trialDurationDays} jours, sans carte bancaire</p>
+              ) : null}
+              <ul className="mt-5 flex-1 space-y-2.5">
+                {p.fonctionnalites.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm text-white/80">
+                    <Check className="mt-0.5 size-4 shrink-0 text-sky" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <Button
+                asChild
+                className={cn(
+                  "mt-6 w-full rounded-xl",
+                  p.populaire
+                    ? "bg-sky text-midnight hover:bg-sky/90"
+                    : "bg-white/10 text-white hover:bg-white/20",
+                )}
+              >
+                <Link to="/rejoindre">{p.freeTrial ? "Démarrer l'essai" : "Demander l'accès"}</Link>
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function Landing() {
   return (
     <div className="surface-ocean relative min-h-screen overflow-x-hidden">
@@ -54,6 +149,12 @@ function Landing() {
           <span className="text-base font-semibold text-white sm:text-lg">Harmonie-dev</span>
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          <a
+            href="#tarifs"
+            className="hidden rounded-xl px-3 py-2 text-sm font-medium text-white/80 transition-colors hover:text-white sm:inline-flex"
+          >
+            Tarifs
+          </a>
           <Button asChild size="sm" variant="ghost" className="rounded-xl text-white hover:bg-white/10 hover:text-white">
             <Link to="/login">Connexion</Link>
           </Button>
@@ -98,6 +199,8 @@ function Landing() {
             </div>
           ))}
         </div>
+
+        <PricingSection />
 
         <div className="mt-16 rounded-3xl border border-white/15 bg-white/10 p-6 backdrop-blur-xl sm:mt-24 sm:p-8 lg:p-12">
           <div className="text-center">

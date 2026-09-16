@@ -39,6 +39,7 @@ export const Route = createFileRoute("/depenses")({
 });
 
 const devisesDepense = ["USD", "EUR", "GBP", "JPY", "CNY", "INR", "TND"];
+const DEFAULT_CURRENCY = "TND";
 
 type FormState = DepensePayload;
 const emptyForm = (categoryId: string): FormState => ({ name: "", price: 0, currency: "USD", description: "", reference: "", categoryId });
@@ -66,6 +67,21 @@ function Depenses() {
     const message = err instanceof ApiError ? err.message : fallback;
     toast.error(fallback, { description: message });
   };
+
+  const [currencyFilter, setCurrencyFilter] = useState(DEFAULT_CURRENCY);
+
+  const currenciesInUse = useMemo(() => {
+    const set = new Set(rows.map((d) => d.currency));
+    set.add(DEFAULT_CURRENCY);
+    return [...set].sort();
+  }, [rows]);
+
+  const filteredRows = useMemo(
+    () => (currencyFilter === "toutes" ? rows : rows.filter((d) => d.currency === currencyFilter)),
+    [rows, currencyFilter],
+  );
+
+  const total = useMemo(() => filteredRows.reduce((sum, d) => sum + d.price, 0), [filteredRows]);
 
   const totalsByCurrency = useMemo(() => {
     const totals = new Map<string, number>();
@@ -213,6 +229,19 @@ function Depenses() {
         subtitle="Suivez les dépenses de votre entreprise par catégorie."
         actions={
           <>
+            <Select value={currencyFilter} onValueChange={setCurrencyFilter}>
+              <SelectTrigger className="h-10 w-[140px] rounded-xl">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="toutes">Toutes les devises</SelectItem>
+                {currenciesInUse.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Button variant="outline" className="rounded-xl" onClick={() => setCatOpen(true)}>
               <Tag className="mr-1.5 size-4" /> Catégories
             </Button>
@@ -232,24 +261,29 @@ function Depenses() {
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <div className="glass rounded-2xl p-5">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Wallet className="size-4" /> Total des dépenses
+            <Wallet className="size-4" />
+            {currencyFilter === "toutes" ? "Total des dépenses" : `Total des dépenses en ${currencyFilter}`}
           </div>
-          {totalsByCurrency.length === 0 ? (
-            <p className="mt-2 text-2xl font-semibold">{formatMoney(0, "USD")}</p>
+          {currencyFilter === "toutes" ? (
+            totalsByCurrency.length === 0 ? (
+              <p className="mt-2 text-2xl font-semibold">{formatMoney(0, DEFAULT_CURRENCY)}</p>
+            ) : (
+              <div className="mt-2 space-y-1">
+                {totalsByCurrency.map(([currency, amount]) => (
+                  <p key={currency} className="text-2xl font-semibold">
+                    {formatMoney(amount, currency)}
+                  </p>
+                ))}
+              </div>
+            )
           ) : (
-            <div className="mt-2 space-y-1">
-              {totalsByCurrency.map(([currency, amount]) => (
-                <p key={currency} className="text-2xl font-semibold">
-                  {formatMoney(amount, currency)}
-                </p>
-              ))}
-            </div>
+            <p className="mt-2 text-2xl font-semibold">{formatMoney(total, currencyFilter)}</p>
           )}
         </div>
       </div>
 
       <DataTable
-        rows={rows}
+        rows={filteredRows}
         columns={columns}
         searchKeys={(r) => `${r.name} ${categoryById(r.categoryId)?.name ?? ""}`}
         searchPlaceholder="Rechercher une dépense…"
