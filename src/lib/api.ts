@@ -4,7 +4,22 @@
 
 import { useSyncExternalStore } from "react";
 
-const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:8090/api/v1";
+// VS Code devtunnels (and similar port-forwarding dev proxies) mint a new random tunnel id every
+// session — e.g. https://r87l169p-8081.uks1.devtunnels.ms for the frontend on port 8081. Rather
+// than hand-editing VITE_API_URL to match every time, detect that pattern from the page's own
+// origin and swap the port segment to the backend's (8090), so it always finds the backend
+// forwarded under the same tunnel session without any .env change.
+function resolveApiUrl(): string {
+	const fallback = import.meta.env["VITE_API_URL"] ?? "http://localhost:8090/api/v1";
+	if (typeof window === "undefined") return fallback;
+	const host = window.location.hostname;
+	const match = host.match(/^(.+)-\d+\.([a-z0-9]+\.devtunnels\.ms)$/i);
+	if (!match) return fallback;
+	const [, tunnelId, suffix] = match;
+	return `${window.location.protocol}//${tunnelId}-8090.${suffix}/api/v1`;
+}
+
+const API_URL = resolveApiUrl();
 const TOKEN_STORAGE_KEY = "harmonie-dev-access-token";
 const REMEMBER_KEY = "harmonie-dev-remember";
 
