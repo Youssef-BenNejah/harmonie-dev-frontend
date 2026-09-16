@@ -15,6 +15,7 @@ import {
 import { FileWarning, Plus, TrendingUp, Users, Wallet } from "lucide-react";
 import { AdminLayout, PageHeader } from "@/components/app/AdminLayout";
 import { KpiCard } from "@/components/app/KpiCard";
+import { PlanUsageCard } from "@/components/app/PlanUsageCard";
 import { StatusBadge } from "@/components/app/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -139,6 +140,10 @@ function Dashboard() {
           accent="var(--sky)"
           {...otherCurrenciesFootnote(summary?.expensesByCurrency, currency)}
         />
+      </div>
+
+      <div className="mt-6">
+        <PlanUsageCard />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">

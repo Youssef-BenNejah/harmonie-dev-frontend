@@ -7,6 +7,8 @@ import { AdminLayout, PageHeader } from "@/components/app/AdminLayout";
 import { DataTable, type Column } from "@/components/app/DataTable";
 import { StatusBadge } from "@/components/app/StatusBadge";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { formatDate } from "@/lib/mock-data";
 import {
@@ -14,6 +16,7 @@ import {
   contactJoinRequest,
   convertJoinRequest,
   listJoinRequests,
+  listPlans,
   rejectJoinRequest,
   type ApiJoinRequest,
   type ApiJoinRequestStatus,
@@ -42,7 +45,10 @@ function JoinRequestsPage() {
     queryKey: ["join-requests"],
     queryFn: listJoinRequests,
   });
+  const { data: plans = [] } = useQuery({ queryKey: ["plans"], queryFn: listPlans });
   const [viewing, setViewing] = useState<ApiJoinRequest | null>(null);
+  const [converting, setConverting] = useState<ApiJoinRequest | null>(null);
+  const [convertPlanId, setConvertPlanId] = useState("");
   const [convertedEmail, setConvertedEmail] = useState<string | null>(null);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["join-requests"] });
@@ -74,15 +80,26 @@ function JoinRequestsPage() {
   });
 
   const convertMutation = useMutation({
-    mutationFn: (id: string) => convertJoinRequest(id),
+    mutationFn: ({ id, planId }: { id: string; planId?: string }) => convertJoinRequest(id, undefined, planId),
     onSuccess: (user) => {
       toast.success("Compte créé et identifiants envoyés par e-mail", { description: user.email });
       setConvertedEmail(user.email);
+      setConverting(null);
       setViewing(null);
       invalidate();
     },
     onError: (err) => onError(err, "Échec de la conversion"),
   });
+
+  const openConvert = (r: ApiJoinRequest) => {
+    setConverting(r);
+    setConvertPlanId(r.requestedPlanId ?? "");
+  };
+
+  const confirmConvert = () => {
+    if (!converting) return;
+    convertMutation.mutate({ id: converting.id, ...(convertPlanId ? { planId: convertPlanId } : {}) });
+  };
 
   const pending = rows.filter((r) => r.status === "PENDING").length;
 
@@ -103,6 +120,16 @@ function JoinRequestsPage() {
     },
     { key: "email", header: "E-mail", cell: (r) => <span className="text-muted-foreground">{r.email}</span> },
     { key: "telephone", header: "Téléphone", cell: (r) => <span className="text-muted-foreground">{r.telephone}</span> },
+    {
+      key: "plan",
+      header: "Plan demandé",
+      cell: (r) =>
+        r.requestedPlanNom ? (
+          <span className="font-medium">{r.requestedPlanNom}</span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
+    },
     {
       key: "created",
       header: "Reçue le",
@@ -131,7 +158,7 @@ function JoinRequestsPage() {
             </Button>
           ) : null}
           {r.status !== "CONVERTED" && r.status !== "REJECTED" ? (
-            <Button size="sm" className="rounded-lg" onClick={() => convertMutation.mutate(r.id)}>
+            <Button size="sm" className="rounded-lg" onClick={() => openConvert(r)}>
               <UserCheck className="mr-1 size-3.5" /> Convertir
             </Button>
           ) : null}
@@ -192,6 +219,10 @@ function JoinRequestsPage() {
                 <p className="mb-1.5 text-sm font-medium">Message</p>
                 <p className="rounded-xl bg-muted/50 p-3.5 text-sm text-muted-foreground">{viewing.message}</p>
               </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Plan demandé</span>
+                <span className="font-medium">{viewing.requestedPlanNom ?? "Non précisé"}</span>
+              </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>Reçue le</span>
                 <span>{formatDate(viewing.createdAt)}</span>
@@ -218,10 +249,48 @@ function JoinRequestsPage() {
               </Button>
             ) : null}
             {viewing && viewing.status !== "CONVERTED" && viewing.status !== "REJECTED" ? (
-              <Button className="w-full rounded-xl sm:w-auto" onClick={() => convertMutation.mutate(viewing.id)}>
+              <Button className="w-full rounded-xl sm:w-auto" onClick={() => openConvert(viewing)}>
                 <UserCheck className="mr-1.5 size-4" /> Convertir en client
               </Button>
             ) : null}
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
+
+      <Sheet open={!!converting} onOpenChange={(o) => !o && setConverting(null)}>
+        <SheetContent className="w-full overflow-y-auto sm:max-w-md">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <UserCheck className="size-5 text-ocean" /> Convertir {converting ? `${converting.prenom} ${converting.nom}` : ""}
+            </SheetTitle>
+            <SheetDescription>Choisissez le plan à activer pour ce nouveau compte — un mot de passe sera généré et envoyé par e-mail.</SheetDescription>
+          </SheetHeader>
+          <div className="mt-6 space-y-2">
+            <Label>Plan d'abonnement</Label>
+            <Select value={convertPlanId} onValueChange={setConvertPlanId}>
+              <SelectTrigger className="h-10 rounded-xl">
+                <SelectValue placeholder="Essai gratuit (par défaut)" />
+              </SelectTrigger>
+              <SelectContent>
+                {plans.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.nom}
+                    {p.freeTrial ? " (essai gratuit)" : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {converting?.requestedPlanNom ? (
+              <p className="text-xs text-muted-foreground">Plan demandé par le prospect : {converting.requestedPlanNom}</p>
+            ) : null}
+          </div>
+          <SheetFooter className="mt-6">
+            <Button variant="outline" className="rounded-xl" onClick={() => setConverting(null)}>
+              Annuler
+            </Button>
+            <Button className="rounded-xl" onClick={confirmConvert} disabled={convertMutation.isPending}>
+              <UserCheck className="mr-1.5 size-4" /> {convertMutation.isPending ? "Conversion…" : "Convertir"}
+            </Button>
           </SheetFooter>
         </SheetContent>
       </Sheet>

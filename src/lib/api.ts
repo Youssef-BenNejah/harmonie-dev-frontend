@@ -13,12 +13,27 @@ type ApiEnvelope<T> = {
   data: T;
 };
 
+// Thrown exceptions (validation, plan limits, not-found, …) are serialized by the backend's
+// GlobalExceptionHandler as an RFC7807 ProblemDetail, not the {success,message,data} envelope —
+// its human-readable text lives in `detail`, not `message`.
+type ApiProblemDetail = { detail?: string; title?: string };
+
 export class ApiError extends Error {
   status: number;
   constructor(message: string, status: number) {
     super(message);
     this.status = status;
   }
+}
+
+/** True when the server rejected the request because it would exceed a plan limit/feature gate. */
+export function isPlanLimitError(err: unknown): err is ApiError {
+  return err instanceof ApiError && err.status === 402;
+}
+
+function extractErrorMessage(body: unknown, status: number): string {
+  const envelope = body as (ApiEnvelope<unknown> & ApiProblemDetail) | null;
+  return envelope?.message ?? envelope?.detail ?? `Request failed (${status})`;
 }
 
 let accessToken: string | null = readStoredToken();
@@ -64,7 +79,7 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
 
   const body = (await res.json().catch(() => null)) as ApiEnvelope<T> | null;
   if (!res.ok || !body?.success) {
-    throw new ApiError(body?.message ?? `Request failed (${res.status})`, res.status);
+    throw new ApiError(extractErrorMessage(body, res.status), res.status);
   }
   return body.data;
 }
@@ -81,7 +96,8 @@ async function requestBlob(path: string, retry = true): Promise<{ blob: Blob; fi
     if (refreshed) return requestBlob(path, false);
   }
   if (!res.ok) {
-    throw new ApiError(`Request failed (${res.status})`, res.status);
+    const body = await res.json().catch(() => null);
+    throw new ApiError(extractErrorMessage(body, res.status), res.status);
   }
   const disposition = res.headers.get("Content-Disposition");
   const match = disposition?.match(/filename="?([^"]+)"?/);
@@ -116,7 +132,7 @@ async function uploadFile<T>(path: string, file: File, fieldName = "file", retry
 
   const body = (await res.json().catch(() => null)) as ApiEnvelope<T> | null;
   if (!res.ok || !body?.success) {
-    throw new ApiError(body?.message ?? `Request failed (${res.status})`, res.status);
+    throw new ApiError(extractErrorMessage(body, res.status), res.status);
   }
   return body.data;
 }
@@ -148,6 +164,7 @@ export type ApiUser = {
   role: ApiRole;
   status: ApiAccountStatus;
   planExpiresAt: string | null;
+  planId: string | null;
   renewalRequested: boolean;
   createdAt: string;
 };
@@ -244,6 +261,7 @@ export type AdminCreateUserPayload = {
   lastName: string;
   status?: ApiAccountStatus;
   planExpiresAt?: string;
+  planId?: string;
 };
 
 export function adminCreateUser(payload: AdminCreateUserPayload) {
@@ -259,6 +277,7 @@ export type AdminUpdateUserPayload = {
   lastName: string;
   status?: ApiAccountStatus;
   planExpiresAt?: string;
+  planId?: string;
 };
 
 export function adminUpdateUser(id: string, payload: AdminUpdateUserPayload) {
@@ -293,6 +312,8 @@ export type ApiJoinRequest = {
   telephone: string;
   entreprise: string;
   message: string | null;
+  requestedPlanId: string | null;
+  requestedPlanNom: string | null;
   status: ApiJoinRequestStatus;
   createdAt: string;
 };
@@ -304,6 +325,7 @@ export type SubmitJoinRequestPayload = {
   telephone: string;
   entreprise: string;
   message?: string;
+  requestedPlanId?: string;
 };
 
 export function submitJoinRequest(payload: SubmitJoinRequestPayload) {
@@ -322,10 +344,10 @@ export function rejectJoinRequest(id: string) {
   return request<ApiJoinRequest>(`/join-requests/${id}/reject`, { method: "PATCH" });
 }
 
-export function convertJoinRequest(id: string, trialDays?: number) {
+export function convertJoinRequest(id: string, trialDays?: number, planId?: string) {
   return request<ApiUser>(`/join-requests/${id}/convert`, {
     method: "POST",
-    body: JSON.stringify({ trialDays }),
+    body: JSON.stringify({ trialDays, planId }),
   });
 }
 
@@ -957,6 +979,16 @@ export type ApiPlan = {
   prixAnnuel: number;
   populaire: boolean;
   fonctionnalites: string[];
+  freeTrial: boolean;
+  trialDurationDays: number | null;
+  maxInvoicesPerMonth: number | null;
+  maxClients: number | null;
+  maxProducts: number | null;
+  maxCustomTaxes: number | null;
+  multiCurrency: boolean;
+  reportsAccess: boolean;
+  expensesEnabled: boolean;
+  bulkExportEnabled: boolean;
 };
 
 export type PlanPayload = {
@@ -966,6 +998,16 @@ export type PlanPayload = {
   prixAnnuel: number;
   populaire: boolean;
   fonctionnalites: string[];
+  freeTrial: boolean;
+  trialDurationDays?: number | null;
+  maxInvoicesPerMonth?: number | null;
+  maxClients?: number | null;
+  maxProducts?: number | null;
+  maxCustomTaxes?: number | null;
+  multiCurrency: boolean;
+  reportsAccess: boolean;
+  expensesEnabled: boolean;
+  bulkExportEnabled: boolean;
 };
 
 export function listPlans() {
@@ -982,6 +1024,31 @@ export function updatePlanApi(id: string, payload: PlanPayload) {
 
 export function deletePlanApi(id: string) {
   return request<void>(`/plans/${id}`, { method: "DELETE" });
+}
+
+// ---------- Plan usage (current tenant) ----------
+
+export type ApiLimitUsage = { used: number; limit: number | null };
+
+export type ApiPlanUsage = {
+  planId: string | null;
+  planNom: string | null;
+  freeTrial: boolean;
+  planExpiresAt: string | null;
+  trialDaysLeft: number | null;
+  invoices: ApiLimitUsage;
+  clients: ApiLimitUsage;
+  products: ApiLimitUsage;
+  customTaxes: ApiLimitUsage;
+  currenciesUsed: number;
+  multiCurrency: boolean;
+  reportsAccess: boolean;
+  expensesEnabled: boolean;
+  bulkExportEnabled: boolean;
+};
+
+export function getMyPlanUsage() {
+  return request<ApiPlanUsage>("/plan-usage/me");
 }
 
 // ---------- Admin — reset password ----------

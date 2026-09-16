@@ -5,6 +5,7 @@ import {
   ChevronDown,
   Coins,
   CreditCard,
+  Crown,
   FileMinus,
   FileText,
   HandCoins,
@@ -35,8 +36,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useQuery } from "@tanstack/react-query";
 import { NotificationsBell } from "@/components/app/NotificationsBell";
-import { logout, useCurrentUser } from "@/lib/api";
+import { getMyPlanUsage, logout, useCurrentUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -59,6 +61,7 @@ const nav = [
 const superAdminNav = [
   { to: "/superadmin", label: "Utilisateurs actuels", icon: ShieldCheck },
   { to: "/superadmin/demandes", label: "Demandes d'adhésion", icon: UserPlus },
+  { to: "/superadmin/plans", label: "Plans d'abonnement", icon: Crown },
 ] as const;
 
 function useDarkMode() {
@@ -153,6 +156,42 @@ function NavList({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
   );
 }
 
+function PlanFooter({ onNavigate }: { onNavigate?: (() => void) | undefined }) {
+  const currentUser = useCurrentUser();
+  const isSuperAdmin = currentUser?.role === "ADMIN";
+  const { data: usage } = useQuery({
+    queryKey: ["plan-usage"],
+    queryFn: getMyPlanUsage,
+    enabled: !!currentUser && !isSuperAdmin,
+    staleTime: 60_000,
+  });
+
+  if (isSuperAdmin || !usage) return null;
+
+  const invoicesLabel =
+    usage.invoices.limit === null ? "Factures illimitées" : `${usage.invoices.used}/${usage.invoices.limit} factures ce mois-ci`;
+
+  return (
+    <div className="mt-auto px-5 pt-6">
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+        <p className="text-sm font-semibold text-sidebar-foreground">{usage.planNom ?? "Plan"}</p>
+        <p className="mt-1 text-xs text-sidebar-foreground/70">
+          {usage.freeTrial && usage.trialDaysLeft !== null
+            ? `Il vous reste ${usage.trialDaysLeft} jour${usage.trialDaysLeft > 1 ? "s" : ""} d'essai.`
+            : invoicesLabel}
+        </p>
+        <Link
+          to="/abonnement"
+          onClick={onNavigate}
+          className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-sky/90 px-3 py-2 text-xs font-semibold text-midnight transition-colors hover:bg-sky"
+        >
+          Voir les offres
+        </Link>
+      </div>
+    </div>
+  );
+}
+
 function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <div className="surface-ocean flex h-full flex-col overflow-y-auto pb-6">
@@ -164,19 +203,7 @@ function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
         </div>
       </div>
       <NavList onNavigate={onNavigate} />
-      <div className="mt-auto px-5 pt-6">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-          <p className="text-sm font-semibold text-sidebar-foreground">Essai gratuit</p>
-          <p className="mt-1 text-xs text-sidebar-foreground/70">Il vous reste 9 jours d'essai.</p>
-          <Link
-            to="/abonnement"
-            onClick={onNavigate}
-            className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-sky/90 px-3 py-2 text-xs font-semibold text-midnight transition-colors hover:bg-sky"
-          >
-            Voir les offres
-          </Link>
-        </div>
-      </div>
+      <PlanFooter onNavigate={onNavigate} />
     </div>
   );
 }

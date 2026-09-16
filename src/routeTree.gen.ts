@@ -32,6 +32,7 @@ import { Route as TaxesRouteImport } from './routes/taxes'
 import { Route as FacturesIdRouteImport } from './routes/factures.$id'
 import { Route as FacturesNouvelleRouteImport } from './routes/factures.nouvelle'
 import { Route as SuperadminDemandesRouteImport } from './routes/superadmin_.demandes'
+import { Route as SuperadminPlansRouteImport } from './routes/superadmin_.plans'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -148,6 +149,11 @@ const SuperadminDemandesRoute = SuperadminDemandesRouteImport.update({
   path: '/superadmin/demandes',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SuperadminPlansRoute = SuperadminPlansRouteImport.update({
+  id: '/superadmin_/plans',
+  path: '/superadmin/plans',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -173,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/factures/$id': typeof FacturesIdRoute
   '/factures/nouvelle': typeof FacturesNouvelleRoute
   '/superadmin/demandes': typeof SuperadminDemandesRoute
+  '/superadmin/plans': typeof SuperadminPlansRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -198,6 +205,7 @@ export interface FileRoutesByTo {
   '/factures/$id': typeof FacturesIdRoute
   '/factures/nouvelle': typeof FacturesNouvelleRoute
   '/superadmin/demandes': typeof SuperadminDemandesRoute
+  '/superadmin/plans': typeof SuperadminPlansRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/factures/$id': typeof FacturesIdRoute
   '/factures/nouvelle': typeof FacturesNouvelleRoute
   '/superadmin_/demandes': typeof SuperadminDemandesRoute
+  '/superadmin_/plans': typeof SuperadminPlansRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -251,6 +260,7 @@ export interface FileRouteTypes {
     | '/factures/$id'
     | '/factures/nouvelle'
     | '/superadmin/demandes'
+    | '/superadmin/plans'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -276,6 +286,7 @@ export interface FileRouteTypes {
     | '/factures/$id'
     | '/factures/nouvelle'
     | '/superadmin/demandes'
+    | '/superadmin/plans'
   id:
     | '__root__'
     | '/'
@@ -301,6 +312,7 @@ export interface FileRouteTypes {
     | '/factures/$id'
     | '/factures/nouvelle'
     | '/superadmin_/demandes'
+    | '/superadmin_/plans'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -327,6 +339,7 @@ export interface RootRouteChildren {
   FacturesIdRoute: typeof FacturesIdRoute
   FacturesNouvelleRoute: typeof FacturesNouvelleRoute
   SuperadminDemandesRoute: typeof SuperadminDemandesRoute
+  SuperadminPlansRoute: typeof SuperadminPlansRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -492,6 +505,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SuperadminDemandesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/superadmin_/plans': {
+      id: '/superadmin_/plans'
+      path: '/superadmin/plans'
+      fullPath: '/superadmin/plans'
+      preLoaderRoute: typeof SuperadminPlansRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -519,6 +539,7 @@ const rootRouteChildren: RootRouteChildren = {
   FacturesIdRoute: FacturesIdRoute,
   FacturesNouvelleRoute: FacturesNouvelleRoute,
   SuperadminDemandesRoute: SuperadminDemandesRoute,
+  SuperadminPlansRoute: SuperadminPlansRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

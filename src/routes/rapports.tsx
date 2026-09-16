@@ -5,15 +5,18 @@ import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAx
 import { Download, TrendingDown, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { AdminLayout, PageHeader } from "@/components/app/AdminLayout";
+import { PlanFeatureLocked } from "@/components/app/PlanUsageCard";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatMoney } from "@/lib/mock-data";
 import {
+  ApiError,
   downloadReportPdf,
   getRevenueSeries,
   getReportOverview,
   getTopClients,
   getTopServices,
+  isPlanLimitError,
   listCurrencies,
   type ApiCurrencyAmount,
 } from "@/lib/api";
@@ -37,7 +40,11 @@ function otherCurrencies(amounts: ApiCurrencyAmount[] | undefined, selected: str
 function Rapports() {
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
   const { data: currencies = [] } = useQuery({ queryKey: ["currencies"], queryFn: listCurrencies });
-  const { data: overview } = useQuery({ queryKey: ["report-overview", currency], queryFn: () => getReportOverview(undefined, undefined, currency) });
+  const { data: overview, error: overviewError } = useQuery({
+    queryKey: ["report-overview", currency],
+    queryFn: () => getReportOverview(undefined, undefined, currency),
+    retry: (failureCount, err) => !isPlanLimitError(err) && failureCount < 3,
+  });
   const { data: revenueSeries = [] } = useQuery({ queryKey: ["report-revenue-series", currency], queryFn: () => getRevenueSeries(9, currency) });
   const { data: topClients = [], isLoading: topClientsLoading } = useQuery({
     queryKey: ["report-top-clients", currency],
@@ -58,12 +65,21 @@ function Rapports() {
     try {
       await downloadReportPdf(undefined, undefined, currency);
       toast.success("Rapport téléchargé");
-    } catch {
-      toast.error("Échec de la génération du rapport");
+    } catch (err) {
+      toast.error("Échec de la génération du rapport", { description: err instanceof ApiError ? err.message : undefined });
     } finally {
       setExporting(false);
     }
   };
+
+  if (isPlanLimitError(overviewError)) {
+    return (
+      <AdminLayout>
+        <PageHeader title="Rapports" subtitle="Analyse de votre activité sur les 9 derniers mois." />
+        <PlanFeatureLocked label="Les rapports" />
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>

@@ -33,6 +33,7 @@ import {
   adminRejectRenewal,
   adminResetPassword,
   adminUpdateUser,
+  listPlans,
   type ApiAccountStatus,
   type ApiUser,
 } from "@/lib/api";
@@ -66,19 +67,28 @@ const labelToStatus: Record<EtatLabel, ApiAccountStatus> = {
 
 const daysUntil = (iso: string | null) => (iso ? Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000) : null);
 
-type AddForm = { name: string; surname: string; email: string; etat: EtatLabel; planExpiration: string };
-const emptyAddForm = (): AddForm => ({ name: "", surname: "", email: "", etat: "Active", planExpiration: new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10) });
+type AddForm = { name: string; surname: string; email: string; etat: EtatLabel; planExpiration: string; planId: string };
+const emptyAddForm = (): AddForm => ({
+  name: "",
+  surname: "",
+  email: "",
+  etat: "Active",
+  planExpiration: new Date(Date.now() + 15 * 86400000).toISOString().slice(0, 10),
+  planId: "",
+});
 
-type EditForm = { etat: EtatLabel; planExpiration: string };
+type EditForm = { etat: EtatLabel; planExpiration: string; planId: string };
 
 function SuperAdmin() {
   const queryClient = useQueryClient();
   const { data: rows = [], isLoading, isError } = useQuery({ queryKey: ["admin-users"], queryFn: adminListUsers });
+  const { data: plans = [] } = useQuery({ queryKey: ["plans"], queryFn: listPlans });
+  const planName = (id: string | null) => plans.find((p) => p.id === id)?.nom ?? "—";
 
   const [addOpen, setAddOpen] = useState(false);
   const [addForm, setAddForm] = useState<AddForm>(emptyAddForm());
   const [editing, setEditing] = useState<ApiUser | null>(null);
-  const [editForm, setEditForm] = useState<EditForm>({ etat: "Active", planExpiration: "" });
+  const [editForm, setEditForm] = useState<EditForm>({ etat: "Active", planExpiration: "", planId: "" });
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["admin-users"] });
   const onError = (err: unknown, fallback: string) => {
@@ -165,6 +175,7 @@ function SuperAdmin() {
       lastName: addForm.surname,
       status: labelToStatus[addForm.etat],
       planExpiresAt: new Date(addForm.planExpiration).toISOString(),
+      ...(addForm.planId ? { planId: addForm.planId } : {}),
     });
   };
 
@@ -173,6 +184,7 @@ function SuperAdmin() {
     setEditForm({
       etat: statusToLabel[u.status],
       planExpiration: u.planExpiresAt ? u.planExpiresAt.slice(0, 10) : "",
+      planId: u.planId ?? "",
     });
   };
 
@@ -186,7 +198,8 @@ function SuperAdmin() {
         firstName: editing.firstName ?? "",
         lastName: editing.lastName ?? "",
         status: labelToStatus[nextEtat],
-        planExpiresAt: editForm.planExpiration ? new Date(editForm.planExpiration).toISOString() : undefined,
+        ...(editForm.planExpiration ? { planExpiresAt: new Date(editForm.planExpiration).toISOString() } : {}),
+        ...(editForm.planId && editForm.planId !== editing.planId ? { planId: editForm.planId } : {}),
       },
     });
   };
@@ -213,6 +226,13 @@ function SuperAdmin() {
       ),
     },
     { key: "etat", header: "État", cell: (r) => <StatusBadge status={statusToLabel[r.status]} /> },
+    {
+      key: "plan",
+      header: "Plan",
+      sortable: true,
+      sortValue: (r) => planName(r.planId),
+      cell: (r) => <span className="text-sm font-medium">{planName(r.planId)}</span>,
+    },
     {
       key: "daysLeft",
       header: "Jours restants",
@@ -375,6 +395,23 @@ function SuperAdmin() {
                 <Input type="date" value={addForm.planExpiration} onChange={(e) => setAddForm({ ...addForm, planExpiration: e.target.value })} className="rounded-xl" />
               </div>
             </div>
+            <div className="space-y-2">
+              <Label>Plan d'abonnement</Label>
+              <Select value={addForm.planId} onValueChange={(v) => setAddForm({ ...addForm, planId: v })}>
+                <SelectTrigger className="h-10 rounded-xl">
+                  <SelectValue placeholder="Essai gratuit (par défaut)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {plans.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.nom}
+                      {p.freeTrial ? " (essai gratuit)" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Laissez vide pour assigner automatiquement le plan d'essai gratuit.</p>
+            </div>
           </div>
           <SheetFooter className="mt-6">
             <Button variant="outline" className="rounded-xl" onClick={() => setAddOpen(false)}>
@@ -426,6 +463,22 @@ function SuperAdmin() {
             <div className="space-y-2">
               <Label>Date d'expiration</Label>
               <Input type="date" value={editForm.planExpiration} onChange={(e) => setEditForm({ ...editForm, planExpiration: e.target.value })} className="rounded-xl" />
+            </div>
+            <div className="space-y-2">
+              <Label>Plan d'abonnement</Label>
+              <Select value={editForm.planId} onValueChange={(v) => setEditForm({ ...editForm, planId: v })}>
+                <SelectTrigger className="h-10 rounded-xl">
+                  <SelectValue placeholder="Choisir un plan" />
+                </SelectTrigger>
+                <SelectContent>
+                  {plans.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.nom}
+                      {p.freeTrial ? " (essai gratuit)" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <Button
               variant="outline"

@@ -132,8 +132,9 @@ export function InvoiceListPage({
     try {
       await downloadInvoicesZip(selected);
       toast.success("Export ZIP prêt", { description: `${selected.length} facture(s)` });
-    } catch {
-      toast.error("Échec de l'export ZIP");
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : undefined;
+      toast.error("Échec de l'export ZIP", { description: message });
     } finally {
       setExporting(false);
     }
