@@ -873,6 +873,44 @@ export function convertInvoiceApi(id: string) {
   return request<ApiInvoice>(`/invoices/${id}/convert`, { method: "POST" });
 }
 
+// ---------- Import en masse ----------
+
+export type InvoiceImportRowPayload = {
+  line: number;
+  client: string;
+  date: string;
+  devise: string;
+  montant: number;
+  montantPaye?: number;
+  statut?: ApiPaymentStatus;
+  type?: ApiInvoiceType;
+  numero?: number;
+  note?: string;
+};
+
+export type InvoiceImportPayload = {
+  fromDate: string;
+  toDate: string;
+  rows: InvoiceImportRowPayload[];
+};
+
+export type ApiInvoiceImportRowResult = {
+  line: number;
+  success: boolean;
+  message: string | null;
+  invoiceId: string | null;
+};
+
+export type ApiInvoiceImportResult = {
+  imported: number;
+  failed: number;
+  results: ApiInvoiceImportRowResult[];
+};
+
+export function bulkImportInvoices(payload: InvoiceImportPayload) {
+  return request<ApiInvoiceImportResult>("/invoices/import", { method: "POST", body: JSON.stringify(payload) });
+}
+
 // ---------- Paiements ----------
 
 export type ApiPaymentMethod = "Virement bancaire" | "Espèces" | "Autres";

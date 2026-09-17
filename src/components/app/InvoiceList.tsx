@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Copy, Download, Eye, FileArchive, FileDown, HandCoins, Mail, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import { Copy, Download, Eye, FileArchive, FileDown, HandCoins, Mail, MoreHorizontal, Pencil, Plus, Trash2, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { AdminLayout, PageHeader } from "@/components/app/AdminLayout";
+import { BulkImportInvoicesDialog } from "@/components/app/BulkImportInvoicesDialog";
 import { DataTable, type Column } from "@/components/app/DataTable";
 import { MarkPaidSheet } from "@/components/app/MarkPaidSheet";
 import { StatusBadge } from "@/components/app/StatusBadge";
@@ -56,6 +57,7 @@ export function InvoiceListPage({
   const [dateTo, setDateTo] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [payingInvoice, setPayingInvoice] = useState<ApiInvoice | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const filtered = useMemo(
     () =>
@@ -233,6 +235,9 @@ export function InvoiceListPage({
         subtitle={subtitle}
         actions={
           <>
+            <Button variant="outline" className="rounded-xl" onClick={() => setImportOpen(true)}>
+              <Upload className="mr-1.5 size-4" /> Importer
+            </Button>
             <Button
               variant="outline"
               className="rounded-xl"
@@ -333,6 +338,7 @@ export function InvoiceListPage({
       </div>
 
       <MarkPaidSheet invoice={payingInvoice} open={!!payingInvoice} onOpenChange={(o) => !o && setPayingInvoice(null)} />
+      <BulkImportInvoicesDialog open={importOpen} onOpenChange={setImportOpen} type={type} onImported={invalidate} />
     </AdminLayout>
   );
 }
