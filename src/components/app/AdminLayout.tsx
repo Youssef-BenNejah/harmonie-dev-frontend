@@ -258,7 +258,12 @@ export function AdminLayout({ children }: { children: ReactNode }) {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="ml-1 flex items-center gap-2 rounded-xl px-1.5 py-1 transition-colors hover:bg-accent">
-                  <span className="grid size-10 shrink-0 place-items-center overflow-hidden rounded-full bg-ocean text-sm font-semibold text-primary-foreground">
+                  <span
+                    className={cn(
+                      "grid size-10 shrink-0 place-items-center overflow-hidden rounded-full text-sm font-semibold",
+                      currentUser?.photoUrl ? "bg-white" : "bg-ocean text-primary-foreground",
+                    )}
+                  >
                     {currentUser?.photoUrl ? (
                       <img src={currentUser.photoUrl} alt="" className="size-10 rounded-full object-cover" />
                     ) : (
