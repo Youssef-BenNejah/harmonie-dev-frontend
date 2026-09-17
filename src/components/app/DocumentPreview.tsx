@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ExternalLink, FileText, FileWarning } from "lucide-react";
+import { ExternalLink, FileText, FileWarning, Maximize2 } from "lucide-react";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".webp", ".bmp"];
@@ -56,6 +57,7 @@ export function DocumentPreview({
   const [imgSrc, setImgSrc] = useState(isKnownImage ? url : (rasterUrl ?? url));
   const [usedFallback, setUsedFallback] = useState(!isKnownImage);
   const [failed, setFailed] = useState(false);
+  const [fullscreen, setFullscreen] = useState(false);
 
   const handleImgError = () => {
     if (!usedFallback && rasterUrl) {
@@ -66,33 +68,58 @@ export function DocumentPreview({
     }
   };
 
+  const content = (previewHeight: string) =>
+    failed ? (
+      <div className="flex flex-col items-center justify-center gap-2 py-10 text-center text-xs text-muted-foreground">
+        <FileWarning className="size-6" />
+        Aperçu indisponible pour ce fichier.
+      </div>
+    ) : isPdf ? (
+      <iframe src={url} title="Document" className={cn("w-full", previewHeight)} onError={() => setFailed(true)} />
+    ) : (
+      <img
+        src={imgSrc}
+        alt="Document"
+        className={cn("w-full object-contain", previewHeight.replace("h-", "max-h-"))}
+        onError={handleImgError}
+      />
+    );
+
   return (
     <div className={cn("overflow-hidden rounded-xl border border-border/60 bg-muted/30", className)}>
       <div className="flex items-center justify-between border-b border-border/60 bg-background/60 px-3 py-1.5">
         <span className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
           <FileText className="size-3.5" /> {isPdf ? "Document PDF" : "Document"}
         </span>
-        {failed ? (
+        <div className="flex items-center gap-3">
+          {!failed ? (
+            <button
+              type="button"
+              onClick={() => setFullscreen(true)}
+              title="Afficher en plein écran"
+              className="flex items-center gap-1 text-xs text-ocean hover:underline dark:text-sky"
+            >
+              Plein écran <Maximize2 className="size-3" />
+            </button>
+          ) : null}
           <a
             href={url}
             target="_blank"
             rel="noreferrer"
             className="flex items-center gap-1 text-xs text-ocean hover:underline dark:text-sky"
           >
-            Ouvrir dans un nouvel onglet <ExternalLink className="size-3" />
+            Ouvrir <ExternalLink className="size-3" />
           </a>
-        ) : null}
-      </div>
-      {failed ? (
-        <div className="flex flex-col items-center justify-center gap-2 py-10 text-center text-xs text-muted-foreground">
-          <FileWarning className="size-6" />
-          Aperçu indisponible pour ce fichier.
         </div>
-      ) : isPdf ? (
-        <iframe src={url} title="Document" className={cn("w-full", height)} onError={() => setFailed(true)} />
-      ) : (
-        <img src={imgSrc} alt="Document" className={cn("w-full object-contain", height.replace("h-", "max-h-"))} onError={handleImgError} />
-      )}
+      </div>
+      {content(height)}
+
+      <Dialog open={fullscreen} onOpenChange={setFullscreen}>
+        <DialogContent className="flex h-[92vh] w-[95vw] max-w-6xl flex-col gap-2 overflow-hidden p-3">
+          <DialogTitle className="sr-only">{isPdf ? "Document PDF" : "Document"}</DialogTitle>
+          <div className="flex-1 overflow-auto rounded-lg bg-muted/30">{content("h-full")}</div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
