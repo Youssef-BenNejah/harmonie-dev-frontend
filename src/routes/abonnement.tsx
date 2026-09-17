@@ -158,22 +158,26 @@ function Abonnement() {
                 </li>
               ))}
             </ul>
-            <Button
-              className={cn("mt-6 w-full rounded-xl", !p.populaire && "bg-secondary text-secondary-foreground hover:bg-secondary/80")}
-              onClick={() => toast("Fonctionnalité à venir", { description: `Plan ${p.nom} — paiement bientôt disponible.` })}
-            >
-              Choisir ce plan
-            </Button>
+            {isSuperAdmin ? null : (
+              <Button
+                className={cn("mt-6 w-full rounded-xl", !p.populaire && "bg-secondary text-secondary-foreground hover:bg-secondary/80")}
+                onClick={() => toast("Fonctionnalité à venir", { description: `Plan ${p.nom} — paiement bientôt disponible.` })}
+              >
+                Choisir ce plan
+              </Button>
+            )}
           </div>
         ))}
       </div>
 
-      <div className="mt-8 glass rounded-2xl">
-        <div className="border-b border-border/60 p-5">
-          <h2 className="text-base font-semibold">Historique de facturation</h2>
+      {isSuperAdmin ? null : (
+        <div className="mt-8 glass rounded-2xl">
+          <div className="border-b border-border/60 p-5">
+            <h2 className="text-base font-semibold">Historique de facturation</h2>
+          </div>
+          <EmptyState title="Aucune facture d'abonnement" description="Vos factures de renouvellement apparaîtront ici une fois votre plan activé." />
         </div>
-        <EmptyState title="Aucune facture d'abonnement" description="Vos factures de renouvellement apparaîtront ici une fois votre plan activé." />
-      </div>
+      )}
     </AdminLayout>
   );
 }

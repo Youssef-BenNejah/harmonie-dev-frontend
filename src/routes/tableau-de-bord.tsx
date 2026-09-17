@@ -68,6 +68,7 @@ function otherCurrenciesFootnote(amounts: ApiCurrencyAmount[] | undefined, selec
 
 function Dashboard() {
   const currentUser = useCurrentUser();
+  const isSuperAdmin = currentUser?.role === "ADMIN";
   const [currency, setCurrency] = useState(DEFAULT_CURRENCY);
   const { data: currencies = [] } = useQuery({ queryKey: ["currencies"], queryFn: listCurrencies });
   const { data: summary } = useQuery({ queryKey: ["dashboard-summary", currency], queryFn: () => getDashboardSummary(currency) });
@@ -142,9 +143,11 @@ function Dashboard() {
         />
       </div>
 
-      <div className="mt-6">
-        <PlanUsageCard />
-      </div>
+      {isSuperAdmin ? null : (
+        <div className="mt-6">
+          <PlanUsageCard />
+        </div>
+      )}
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
         <div className="glass rounded-2xl p-5 lg:col-span-2">
