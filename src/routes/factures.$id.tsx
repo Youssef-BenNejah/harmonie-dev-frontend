@@ -279,7 +279,7 @@ function FactureDetail() {
             <div className="glass rounded-2xl p-5">
               <h2 className="text-base font-semibold">Document joint</h2>
               <div className="mt-3">
-                <DocumentPreview url={invoice.factureImage} />
+                <DocumentPreview url={invoice.factureImage} height="h-[750px]" />
               </div>
             </div>
           ) : null}

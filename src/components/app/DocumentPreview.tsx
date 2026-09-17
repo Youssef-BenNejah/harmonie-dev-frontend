@@ -34,7 +34,18 @@ function cloudinaryRasterUrl(url: string): string | null {
  * `isPdf` can be passed explicitly for a local blob: URL (before upload), whose extension can't
  * tell us the type — otherwise it's guessed from the URL's file extension.
  */
-export function DocumentPreview({ url, className, isPdf: isPdfProp }: { url: string; className?: string; isPdf?: boolean }) {
+export function DocumentPreview({
+  url,
+  className,
+  isPdf: isPdfProp,
+  height = "h-[420px]",
+}: {
+  url: string;
+  className?: string;
+  isPdf?: boolean;
+  /** Tailwind height class for the preview area (img/iframe). Defaults to h-[420px]. */
+  height?: string;
+}) {
   const isPdf = isPdfProp ?? isPdfUrl(url);
   const isKnownImage = isPdfProp === false || IMAGE_EXTENSIONS.includes(extensionOf(url));
   const rasterUrl = cloudinaryRasterUrl(url);
@@ -78,9 +89,9 @@ export function DocumentPreview({ url, className, isPdf: isPdfProp }: { url: str
           Aperçu indisponible pour ce fichier.
         </div>
       ) : isPdf ? (
-        <iframe src={url} title="Document" className="h-[420px] w-full" onError={() => setFailed(true)} />
+        <iframe src={url} title="Document" className={cn("w-full", height)} onError={() => setFailed(true)} />
       ) : (
-        <img src={imgSrc} alt="Document" className="max-h-[420px] w-full object-contain" onError={handleImgError} />
+        <img src={imgSrc} alt="Document" className={cn("w-full object-contain", height.replace("h-", "max-h-"))} onError={handleImgError} />
       )}
     </div>
   );
