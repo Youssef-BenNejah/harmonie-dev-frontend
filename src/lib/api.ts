@@ -4,19 +4,15 @@
 
 import { useSyncExternalStore } from "react";
 
-// VS Code devtunnels (and similar port-forwarding dev proxies) mint a new random tunnel id every
-// session — e.g. https://r87l169p-8081.uks1.devtunnels.ms for the frontend on port 8081. Rather
-// than hand-editing VITE_API_URL to match every time, detect that pattern from the page's own
-// origin and swap the port segment to the backend's (8090), so it always finds the backend
-// forwarded under the same tunnel session without any .env change.
+// In dev, calls go through this app's own same-origin proxy (see src/server.ts's `/__api__`
+// handler) instead of hitting the backend's own origin/port directly. That means sharing this
+// dev server through a tunnel — devtunnels, ngrok, cloudflared, anything — never needs a second
+// port forwarded for the API, and there's no tunnel-URL pattern to guess or CORS to configure:
+// the browser only ever talks to this one origin. Production builds use the real backend URL
+// baked in at build time instead, since there's no local backend process to proxy to there.
 function resolveApiUrl(): string {
-	const fallback = import.meta.env["VITE_API_URL"] ?? "http://localhost:8090/api/v1";
-	if (typeof window === "undefined") return fallback;
-	const host = window.location.hostname;
-	const match = host.match(/^(.+)-\d+\.([a-z0-9]+\.devtunnels\.ms)$/i);
-	if (!match) return fallback;
-	const [, tunnelId, suffix] = match;
-	return `${window.location.protocol}//${tunnelId}-8090.${suffix}/api/v1`;
+	if (import.meta.env.DEV) return "/__api__/api/v1";
+	return import.meta.env["VITE_API_URL"] ?? "http://localhost:8090/api/v1";
 }
 
 const API_URL = resolveApiUrl();
