@@ -74,6 +74,7 @@ function NouvelleFacture() {
   const [note, setNote] = useState("");
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [importMontant, setImportMontant] = useState("");
   const [items, setItems] = useState<Line[]>([emptyLine()]);
   const [initialized, setInitialized] = useState(false);
 
@@ -87,6 +88,7 @@ function NouvelleFacture() {
       setTimbre(editing.timbre);
       setNote(editing.note ?? "");
       setFileUrl(editing.factureImage ?? null);
+      if (editing.factureImage) setImportMontant(editing.total ? String(editing.total) : "");
       setItems(
         editing.items.map((it) => ({
           id: it.id,
@@ -124,9 +126,10 @@ function NouvelleFacture() {
     [items, taxes],
   );
 
-  const sousTotalHT = computedItems.reduce((s, l) => s + l.base, 0);
-  const totalTaxes = Math.round(computedItems.reduce((s, l) => s + l.taxAmount, 0) * 100) / 100;
-  const totalTTC = sousTotalHT + totalTaxes + timbre;
+  const importAmount = Number(importMontant.replace(",", ".")) || 0;
+  const sousTotalHT = mode === "import" ? importAmount : computedItems.reduce((s, l) => s + l.base, 0);
+  const totalTaxes = mode === "import" ? 0 : Math.round(computedItems.reduce((s, l) => s + l.taxAmount, 0) * 100) / 100;
+  const totalTTC = mode === "import" ? importAmount : sousTotalHT + totalTaxes + timbre;
 
   const addItem = () => setItems((l) => [...l, emptyLine()]);
   const removeItem = (id: string) => setItems((l) => (l.length > 1 ? l.filter((x) => x.id !== id) : l));
@@ -175,8 +178,13 @@ function NouvelleFacture() {
       taxId: l.taxId,
     }));
     // Import mode attaches a scanned document instead of re-entering line items — the backend
-    // still requires at least one item, so stand in a placeholder that carries no amount.
-    const importPlaceholderItem: InvoiceItemPayload = { article: "Document importé", quantity: 1, price: 0 };
+    // still requires at least one item, so stand in a single placeholder carrying the total the
+    // user typed in instead of the full line-item breakdown.
+    const importPlaceholderItem: InvoiceItemPayload = {
+      article: "Document importé",
+      quantity: 1,
+      price: Number(importMontant.replace(",", ".")) || 0,
+    };
     return {
       clientId: selectedClient.id,
       currencyId: selectedDevise.id,
@@ -199,6 +207,10 @@ function NouvelleFacture() {
     }
     if (mode === "import" && !payload.factureImage) {
       toast.error("Document manquant", { description: "Importez une image ou un PDF avant d'enregistrer." });
+      return;
+    }
+    if (mode === "import" && (!importMontant || Number.isNaN(Number(importMontant.replace(",", "."))))) {
+      toast.error("Montant manquant", { description: "Indiquez le montant total de la facture importée." });
       return;
     }
     if (editing) {
@@ -402,6 +414,23 @@ function NouvelleFacture() {
               {fileUrl ? (
                 <div className="space-y-3">
                   <DocumentPreview url={fileUrl} />
+                  <div className="max-w-xs space-y-1.5">
+                    <Label>Montant total</Label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        min={0}
+                        step="0.001"
+                        value={importMontant}
+                        onChange={(e) => setImportMontant(e.target.value)}
+                        placeholder="0.000"
+                        className="h-10 rounded-xl pr-14"
+                      />
+                      <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-muted-foreground">
+                        {selectedDevise?.code}
+                      </span>
+                    </div>
+                  </div>
                   <Button
                     type="button"
                     variant="outline"

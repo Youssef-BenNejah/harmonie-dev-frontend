@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AdminLayout, PageHeader } from "@/components/app/AdminLayout";
 import { BulkImportInvoicesDialog } from "@/components/app/BulkImportInvoicesDialog";
 import { DataTable, type Column } from "@/components/app/DataTable";
+import { DocumentPreview } from "@/components/app/DocumentPreview";
 import { MarkPaidSheet } from "@/components/app/MarkPaidSheet";
 import { StatusBadge } from "@/components/app/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { formatDate, formatMoney, type InvoiceStatus } from "@/lib/mock-data";
 import {
@@ -180,7 +182,28 @@ export function InvoiceListPage({
       className: "text-right",
       sortable: true,
       sortValue: (r) => r.total,
-      cell: (r) => <span className="font-semibold">{formatMoney(r.total, r.currency.code)}</span>,
+      cell: (r) => (
+        <span className="inline-flex items-center justify-end gap-1.5">
+          <span className="font-semibold">{formatMoney(r.total, r.currency.code)}</span>
+          {r.factureImage ? (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button
+                  type="button"
+                  title="Voir le document importé"
+                  className="rounded-lg p-1 text-muted-foreground transition-colors hover:bg-accent hover:text-ocean dark:hover:text-sky"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <Eye className="size-4" />
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-2" onClick={(e) => e.stopPropagation()}>
+                <DocumentPreview url={r.factureImage} className="w-72" />
+              </PopoverContent>
+            </Popover>
+          ) : null}
+        </span>
+      ),
     },
     {
       key: "actions",
