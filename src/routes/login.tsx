@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { AuthLayout } from "@/components/app/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ApiError, login } from "@/lib/api";
@@ -70,8 +71,7 @@ function Login() {
         </div>
         <div className="space-y-2">
           <Label>Mot de passe</Label>
-          <Input
-            type="password"
+          <PasswordInput
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}

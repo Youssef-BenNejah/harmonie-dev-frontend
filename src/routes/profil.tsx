@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AdminLayout, PageHeader } from "@/components/app/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { ApiError, updateMyProfile, uploadMyPhoto, useCurrentUser } from "@/lib/api";
 import { requireAuth } from "@/lib/route-guards";
@@ -139,11 +140,11 @@ function Profil() {
             <div className="mt-4 grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Nouveau mot de passe</Label>
-                <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="rounded-xl" />
+                <PasswordInput value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="rounded-xl" />
               </div>
               <div className="space-y-2">
                 <Label>Confirmer le mot de passe</Label>
-                <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="rounded-xl" />
+                <PasswordInput value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="rounded-xl" />
               </div>
               <div className="sm:col-span-2">
                 <Button className="rounded-xl" onClick={savePassword}>

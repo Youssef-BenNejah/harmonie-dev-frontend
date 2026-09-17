@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { AuthLayout } from "@/components/app/AuthLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { ApiError, forgotPassword, resetPassword, verifyResetCode } from "@/lib/api";
@@ -156,8 +157,7 @@ function ForgotPassword() {
         <form className="space-y-4" onSubmit={submitNewPassword}>
           <div className="space-y-2">
             <Label>Nouveau mot de passe</Label>
-            <Input
-              type="password"
+            <PasswordInput
               required
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
@@ -167,8 +167,7 @@ function ForgotPassword() {
           </div>
           <div className="space-y-2">
             <Label>Confirmer</Label>
-            <Input
-              type="password"
+            <PasswordInput
               required
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
