@@ -21,8 +21,10 @@ import {
   type ApiJoinRequest,
   type ApiJoinRequestStatus,
 } from "@/lib/api";
+import { requireSuperAdmin } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/superadmin_/demandes")({
+  beforeLoad: requireSuperAdmin,
   head: () => ({
     meta: [
       { title: "Demandes d'adhésion — Harmonie-dev" },
@@ -168,7 +170,7 @@ function JoinRequestsPage() {
   ];
 
   return (
-    <AdminLayout>
+    <AdminLayout requireRole="ADMIN">
       <PageHeader
         title="Demandes d'adhésion"
         subtitle="Les demandes reçues depuis la page publique — contactez puis convertissez en compte client."

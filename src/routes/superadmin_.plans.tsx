@@ -21,8 +21,10 @@ import {
   type ApiPlan,
   type PlanPayload,
 } from "@/lib/api";
+import { requireSuperAdmin } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/superadmin_/plans")({
+  beforeLoad: requireSuperAdmin,
   head: () => ({
     meta: [
       { title: "Plans d'abonnement — Harmonie-dev" },
@@ -254,7 +256,7 @@ function SuperAdminPlans() {
   ];
 
   return (
-    <AdminLayout>
+    <AdminLayout requireRole="ADMIN">
       <PageHeader
         title="Plans d'abonnement"
         subtitle="Définissez les plans proposés et les limites d'utilisation de chacun — les tenants sont bloqués automatiquement lorsqu'ils atteignent une limite."

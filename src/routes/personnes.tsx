@@ -28,8 +28,10 @@ import {
   type ApiPerson,
   type PersonPayload,
 } from "@/lib/api";
+import { requireAuth } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/personnes")({
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "Personnes — Harmonie-dev" },

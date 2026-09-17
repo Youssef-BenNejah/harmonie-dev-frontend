@@ -5,8 +5,10 @@ import { AdminLayout, PageHeader } from "@/components/app/AdminLayout";
 import { DataTable, type Column } from "@/components/app/DataTable";
 import { formatDate, formatMoney } from "@/lib/mock-data";
 import { listAllPayments, type ApiPayment } from "@/lib/api";
+import { requireAuth } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/paiements")({
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "Paiements — Harmonie-dev" },

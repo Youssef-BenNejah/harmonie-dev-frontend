@@ -28,9 +28,11 @@ import {
   type ServiceCategoryPayload,
   type ServicePayload,
 } from "@/lib/api";
+import { requireAuth } from "@/lib/route-guards";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/services")({
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "Services — Harmonie-dev" },

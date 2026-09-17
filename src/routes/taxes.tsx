@@ -22,8 +22,10 @@ import {
   type ApiTax,
   type TaxPayload,
 } from "@/lib/api";
+import { requireAuth } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/taxes")({
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "Taxes — Harmonie-dev" },

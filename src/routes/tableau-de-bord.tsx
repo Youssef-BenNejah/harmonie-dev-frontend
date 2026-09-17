@@ -31,10 +31,12 @@ import {
   type ApiCurrencyAmount,
 } from "@/lib/api";
 import { apiClientLabel, apiInvoiceNumberLabel } from "@/lib/invoice-adapter";
+import { requireAuth } from "@/lib/route-guards";
 
 const DEFAULT_CURRENCY = "TND";
 
 export const Route = createFileRoute("/tableau-de-bord")({
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "Tableau de bord — Harmonie-dev" },

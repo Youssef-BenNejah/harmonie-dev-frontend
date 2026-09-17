@@ -15,8 +15,10 @@ import {
   type ApiCompany,
   type CompanyPayload,
 } from "@/lib/api";
+import { requireAuth } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/mon-entreprise")({
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "Ma entreprise — Harmonie-dev" },

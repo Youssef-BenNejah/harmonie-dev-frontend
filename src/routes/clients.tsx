@@ -23,8 +23,10 @@ import {
   type ApiClient,
   type ApiClientType,
 } from "@/lib/api";
+import { requireAuth } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/clients")({
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "Clients — Harmonie-dev" },

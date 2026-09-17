@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { InvoiceListPage } from "@/components/app/InvoiceList";
+import { requireAuth } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/factures-ventes")({
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "Factures Ventes — Harmonie-dev" },

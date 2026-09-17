@@ -37,7 +37,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useQuery } from "@tanstack/react-query";
 import { NotificationsBell } from "@/components/app/NotificationsBell";
-import { getMyPlanUsage, logout, useCurrentUser } from "@/lib/api";
+import { getMyPlanUsage, logout, useCurrentUser, type ApiRole } from "@/lib/api";
+import { useAuthGuard } from "@/lib/route-guards";
 import { cn } from "@/lib/utils";
 
 const nav = [
@@ -206,7 +207,8 @@ function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
-export function AdminLayout({ children }: { children: ReactNode }) {
+export function AdminLayout({ children, requireRole }: { children: ReactNode; requireRole?: ApiRole }) {
+  useAuthGuard(requireRole);
   const { dark, toggle } = useDarkMode();
   const [open, setOpen] = useState(false);
   const currentUser = useCurrentUser();

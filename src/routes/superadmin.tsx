@@ -37,9 +37,11 @@ import {
   type ApiAccountStatus,
   type ApiUser,
 } from "@/lib/api";
+import { requireSuperAdmin } from "@/lib/route-guards";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/superadmin")({
+  beforeLoad: requireSuperAdmin,
   head: () => ({
     meta: [
       { title: "Super Admin — Harmonie-dev" },
@@ -285,7 +287,7 @@ function SuperAdmin() {
   const isExpiredPicked = editing && editForm.planExpiration ? new Date(editForm.planExpiration) < new Date() : false;
 
   return (
-    <AdminLayout>
+    <AdminLayout requireRole="ADMIN">
       <PageHeader
         title="Super Admin"
         subtitle="Panneau d'administration de la plateforme — gérez toutes les entreprises abonnées."

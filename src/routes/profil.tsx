@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiError, updateMyProfile, uploadMyPhoto, useCurrentUser } from "@/lib/api";
+import { requireAuth } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/profil")({
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "Mon profil — Harmonie-dev" },

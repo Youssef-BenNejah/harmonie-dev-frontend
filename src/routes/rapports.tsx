@@ -20,10 +20,12 @@ import {
   listCurrencies,
   type ApiCurrencyAmount,
 } from "@/lib/api";
+import { requireAuth } from "@/lib/route-guards";
 
 const DEFAULT_CURRENCY = "TND";
 
 export const Route = createFileRoute("/rapports")({
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "Rapports — Harmonie-dev" },

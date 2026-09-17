@@ -28,8 +28,10 @@ import {
   type ApiEntreprise,
   type EntreprisePayload,
 } from "@/lib/api";
+import { requireAuth } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/entreprises")({
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "Entreprises — Harmonie-dev" },

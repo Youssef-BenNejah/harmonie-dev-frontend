@@ -22,8 +22,10 @@ import {
   sendInvoiceByEmail,
 } from "@/lib/api";
 import { apiClientLabel, apiInvoiceNumberLabel } from "@/lib/invoice-adapter";
+import { requireAuth } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/factures/$id")({
+  beforeLoad: requireAuth,
   head: ({ params }) => ({
     meta: [{ title: `Facture ${params.id} — Harmonie-dev` }],
   }),

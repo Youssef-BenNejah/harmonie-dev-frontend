@@ -24,11 +24,13 @@ import {
   type InvoiceItemPayload,
 } from "@/lib/api";
 import { apiClientLabel } from "@/lib/invoice-adapter";
+import { requireAuth } from "@/lib/route-guards";
 
 const searchSchema = z.object({ type: z.enum(["Standard", "Proforma"]).optional(), id: z.string().optional() });
 
 export const Route = createFileRoute("/factures/nouvelle")({
   validateSearch: searchSchema,
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "Nouvelle facture — Harmonie-dev" },

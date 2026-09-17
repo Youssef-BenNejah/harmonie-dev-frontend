@@ -27,8 +27,10 @@ import {
   type DepenseCategoryPayload,
   type DepensePayload,
 } from "@/lib/api";
+import { requireAuth } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/depenses")({
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "Dépenses — Harmonie-dev" },

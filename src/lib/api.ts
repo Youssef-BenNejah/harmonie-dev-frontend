@@ -210,9 +210,13 @@ export type ApiUser = {
 
 let currentUser: ApiUser | null = null;
 const currentUserListeners = new Set<() => void>();
-function setCurrentUser(user: ApiUser | null) {
+export function setCurrentUser(user: ApiUser | null) {
   currentUser = user;
   currentUserListeners.forEach((l) => l());
+}
+/** Synchronous snapshot of the current user, for use outside React (e.g. route `beforeLoad`). */
+export function getCurrentUser() {
+  return currentUser;
 }
 export function useCurrentUser() {
   return useSyncExternalStore(

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
+import { useRedirectIfAuthenticated } from "@/lib/route-guards";
 
 export function AuthLayout({
   title,
@@ -12,6 +13,7 @@ export function AuthLayout({
   children: ReactNode;
   footer?: ReactNode;
 }) {
+  useRedirectIfAuthenticated();
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-10">
       <div className="pointer-events-none absolute -top-32 -left-32 size-96 rounded-full bg-sky/15 blur-3xl" />

@@ -19,8 +19,10 @@ import {
   type ApiCurrency,
   type CurrencyPayload,
 } from "@/lib/api";
+import { requireAuth } from "@/lib/route-guards";
 
 export const Route = createFileRoute("/devise")({
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "Devise — Harmonie-dev" },

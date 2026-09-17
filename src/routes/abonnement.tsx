@@ -10,9 +10,11 @@ import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { formatDate } from "@/lib/mock-data";
 import { ApiError, listPlans, refreshCurrentUser, requestRenewal, useCurrentUser } from "@/lib/api";
+import { requireAuth } from "@/lib/route-guards";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/abonnement")({
+  beforeLoad: requireAuth,
   head: () => ({
     meta: [
       { title: "Abonnement — Harmonie-dev" },
