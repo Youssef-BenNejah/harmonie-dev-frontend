@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Copy, Download, FileCheck2, HandCoins, Mail, Pencil, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { AdminLayout, PageHeader } from "@/components/app/AdminLayout";
+import { DocumentPreview } from "@/components/app/DocumentPreview";
 import { MarkPaidSheet } from "@/components/app/MarkPaidSheet";
 import { StatusBadge } from "@/components/app/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -274,6 +275,15 @@ function FactureDetail() {
         </div>
 
         <div className="space-y-6">
+          {invoice.factureImage ? (
+            <div className="glass rounded-2xl p-5">
+              <h2 className="text-base font-semibold">Document joint</h2>
+              <div className="mt-3">
+                <DocumentPreview url={invoice.factureImage} />
+              </div>
+            </div>
+          ) : null}
+
           <div className="glass rounded-2xl p-5">
             <div className="flex items-center justify-between">
               <h2 className="text-base font-semibold">Suivi du paiement</h2>

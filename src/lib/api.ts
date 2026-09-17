@@ -886,6 +886,7 @@ export type InvoiceImportRowPayload = {
   type?: ApiInvoiceType;
   numero?: number;
   note?: string;
+  factureImage?: string;
 };
 
 export type InvoiceImportPayload = {
@@ -909,6 +910,10 @@ export type ApiInvoiceImportResult = {
 
 export function bulkImportInvoices(payload: InvoiceImportPayload) {
   return request<ApiInvoiceImportResult>("/invoices/import", { method: "POST", body: JSON.stringify(payload) });
+}
+
+export function uploadInvoiceDocument(file: File) {
+  return uploadFile<{ url: string }>("/invoices/documents", file);
 }
 
 // ---------- Paiements ----------

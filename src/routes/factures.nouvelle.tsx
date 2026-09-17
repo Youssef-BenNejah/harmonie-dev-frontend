@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
-import { FileUp, Mail, Plus, Save, Trash2, Upload } from "lucide-react";
+import { FileUp, Loader2, Mail, Plus, Save, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 import { AdminLayout, PageHeader } from "@/components/app/AdminLayout";
+import { DocumentPreview } from "@/components/app/DocumentPreview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,7 @@ import {
   listServices,
   listTaxes,
   updateInvoiceApi,
+  uploadInvoiceDocument,
   type InvoiceItemPayload,
 } from "@/lib/api";
 import { apiClientLabel } from "@/lib/invoice-adapter";
@@ -70,7 +72,8 @@ function NouvelleFacture() {
   const [expirationDate, setExpirationDate] = useState("");
   const [timbre, setTimbre] = useState(0);
   const [note, setNote] = useState("");
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
   const [items, setItems] = useState<Line[]>([emptyLine()]);
   const [initialized, setInitialized] = useState(false);
 
@@ -83,7 +86,7 @@ function NouvelleFacture() {
       setExpirationDate(editing.expirationDate);
       setTimbre(editing.timbre);
       setNote(editing.note ?? "");
-      setFileName(editing.factureImage ?? null);
+      setFileUrl(editing.factureImage ?? null);
       setItems(
         editing.items.map((it) => ({
           id: it.id,
@@ -171,6 +174,9 @@ function NouvelleFacture() {
       price: l.price,
       taxId: l.taxId,
     }));
+    // Import mode attaches a scanned document instead of re-entering line items — the backend
+    // still requires at least one item, so stand in a placeholder that carries no amount.
+    const importPlaceholderItem: InvoiceItemPayload = { article: "Document importé", quantity: 1, price: 0 };
     return {
       clientId: selectedClient.id,
       currencyId: selectedDevise.id,
@@ -180,21 +186,38 @@ function NouvelleFacture() {
       expirationDate,
       note,
       timbre,
-      items: finalItems,
-      factureImage: mode === "import" ? fileName : null,
+      items: mode === "import" ? [importPlaceholderItem] : finalItems,
+      factureImage: mode === "import" ? fileUrl : null,
     };
   };
 
   const persist = () => {
     const payload = buildPayload();
-    if (!payload || !payload.items.every((it) => it.article)) {
+    if (!payload || (mode === "standard" && !payload.items.every((it) => it.article))) {
       toast.error("Formulaire incomplet", { description: "Vérifiez le client, la devise et les articles." });
+      return;
+    }
+    if (mode === "import" && !payload.factureImage) {
+      toast.error("Document manquant", { description: "Importez une image ou un PDF avant d'enregistrer." });
       return;
     }
     if (editing) {
       updateMutation.mutate({ invId: editing.id, payload });
     } else {
       createMutation.mutate(payload);
+    }
+  };
+
+  const pickDocument = async (file: File) => {
+    setUploadingFile(true);
+    try {
+      const { url } = await uploadInvoiceDocument(file);
+      setFileUrl(url);
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : "Échec du téléversement";
+      toast.error("Échec du téléversement", { description: message });
+    } finally {
+      setUploadingFile(false);
     }
   };
 
@@ -375,20 +398,41 @@ function NouvelleFacture() {
               </div>
             </div>
           ) : (
-            <div className="glass rounded-2xl p-8">
-              <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border/70 py-14 text-center transition-colors hover:border-ocean/50 hover:bg-ice/30 dark:hover:bg-white/5">
-                <span className="grid size-14 place-items-center rounded-2xl bg-ocean/10 text-ocean dark:text-sky">
-                  <FileUp className="size-6" />
-                </span>
-                <span className="text-sm font-medium">{fileName ?? "Cliquez pour importer une image ou un PDF"}</span>
-                <span className="text-xs text-muted-foreground">JPG, PNG ou PDF · 5 Mo max</span>
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,application/pdf"
-                  className="hidden"
-                  onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
-                />
-              </label>
+            <div className="glass space-y-4 rounded-2xl p-8">
+              {fileUrl ? (
+                <div className="space-y-3">
+                  <DocumentPreview url={fileUrl} />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="rounded-xl"
+                    onClick={() => setFileUrl(null)}
+                  >
+                    <X className="mr-1.5 size-3.5" /> Retirer le document
+                  </Button>
+                </div>
+              ) : (
+                <label className="flex cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border/70 py-14 text-center transition-colors hover:border-ocean/50 hover:bg-ice/30 dark:hover:bg-white/5">
+                  <span className="grid size-14 place-items-center rounded-2xl bg-ocean/10 text-ocean dark:text-sky">
+                    {uploadingFile ? <Loader2 className="size-6 animate-spin" /> : <FileUp className="size-6" />}
+                  </span>
+                  <span className="text-sm font-medium">
+                    {uploadingFile ? "Téléversement…" : "Cliquez pour importer une image ou un PDF"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">JPG, PNG ou PDF · 8 Mo max</span>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,application/pdf"
+                    className="hidden"
+                    disabled={uploadingFile}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) pickDocument(file);
+                    }}
+                  />
+                </label>
+              )}
             </div>
           )}
         </div>
@@ -417,7 +461,7 @@ function NouvelleFacture() {
             </div>
 
             <div className="mt-6 space-y-2">
-              <Button className="w-full rounded-xl" onClick={persist} disabled={saving}>
+              <Button className="w-full rounded-xl" onClick={persist} disabled={saving || uploadingFile}>
                 <Save className="mr-1.5 size-4" /> {editing ? "Enregistrer" : "Enregistrer la facture"}
               </Button>
               <Button variant="outline" className="w-full rounded-xl" onClick={sendEmail}>
