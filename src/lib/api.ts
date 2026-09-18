@@ -194,7 +194,18 @@ async function uploadFile<T>(path: string, file: File, fieldName = "file", retry
   return body.data;
 }
 
-async function tryRefresh(): Promise<boolean> {
+// Several requests can hit a 401 at once; they must share ONE refresh call. The server rotates the
+// refresh token on every use, so a second parallel call would look like a stolen-token replay and
+// end the whole session.
+let refreshInFlight: Promise<boolean> | null = null;
+function tryRefresh(): Promise<boolean> {
+  refreshInFlight ??= doRefresh().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+async function doRefresh(): Promise<boolean> {
   try {
     const res = await fetch(`${API_URL}/auth/refresh`, { method: "POST", credentials: "include" });
     if (!res.ok) return false;
