@@ -123,6 +123,24 @@ async function request<T>(path: string, options: RequestInit = {}, retry = true)
   return body.data;
 }
 
+// List endpoints are paginated server-side (?page=&size=, size capped at 200). `requestAll` walks the
+// pages so screens that filter and sort in the browser keep working, but no single request can pull an
+// entire collection; use `requestPage` directly for screens that page in the UI.
+export const PAGE_SIZE = 200;
+
+function requestPage<T>(path: string, page: number, size = PAGE_SIZE) {
+  return request<T[]>(`${path}?page=${page}&size=${size}`);
+}
+
+async function requestAll<T>(path: string): Promise<T[]> {
+  const all: T[] = [];
+  for (let page = 0; ; page++) {
+    const items = await requestPage<T>(path, page);
+    all.push(...items);
+    if (items.length < PAGE_SIZE) return all;
+  }
+}
+
 // For binary endpoints (PDF/ZIP downloads) — the generic `request` above always parses JSON.
 async function requestBlob(path: string, retry = true): Promise<{ blob: Blob; fileName: string | null }> {
   const headers = new Headers();
@@ -425,7 +443,7 @@ export type PersonPayload = {
 };
 
 export function listPersons() {
-  return request<ApiPerson[]>("/persons");
+  return requestAll<ApiPerson>("/persons");
 }
 
 export function createPerson(payload: PersonPayload) {
@@ -472,7 +490,7 @@ export type EntreprisePayload = {
 };
 
 export function listEntreprises() {
-  return request<ApiEntreprise[]>("/entreprises");
+  return requestAll<ApiEntreprise>("/entreprises");
 }
 
 export function createEntreprise(payload: EntreprisePayload) {
@@ -506,7 +524,7 @@ export function createClient(input: { type: ApiClientType; personId?: string; en
 }
 
 export function listClients() {
-  return request<ApiClient[]>("/clients");
+  return requestAll<ApiClient>("/clients");
 }
 
 export function getClientById(id: string) {
@@ -615,7 +633,7 @@ export type ServicePayload = {
 };
 
 export function listServices() {
-  return request<ApiService[]>("/services");
+  return requestAll<ApiService>("/services");
 }
 
 export function createService(payload: ServicePayload) {
@@ -720,7 +738,7 @@ export type DepensePayload = {
 };
 
 export function listDepenses() {
-  return request<ApiDepense[]>("/depenses");
+  return requestAll<ApiDepense>("/depenses");
 }
 
 export function createDepense(payload: DepensePayload) {
@@ -845,8 +863,13 @@ export type InvoicePayload = {
   factureImage?: string | null;
 };
 
+/** One page of invoices (0-based). */
+export function listInvoicesPage(page: number, size = 50) {
+  return requestPage<ApiInvoice>("/invoices", page, size);
+}
+
 export function listInvoices() {
-  return request<ApiInvoice[]>("/invoices");
+  return requestAll<ApiInvoice>("/invoices");
 }
 
 export function getInvoiceById(id: string) {
@@ -1181,5 +1204,5 @@ export async function downloadReportPdf(dateFrom?: string, dateTo?: string, curr
 // ---------- Paiements (global ledger) ----------
 
 export function listAllPayments() {
-  return request<ApiPayment[]>("/payments");
+  return requestAll<ApiPayment>("/payments");
 }
