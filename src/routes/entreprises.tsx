@@ -1,3 +1,4 @@
+import { CountrySelect } from "@/components/app/CountrySelect";
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -234,7 +235,7 @@ function Entreprises() {
               </div>
               <div className="space-y-2">
                 <Label>Pays</Label>
-                <Input value={form.pays} onChange={(e) => setForm({ ...form, pays: e.target.value })} className="rounded-xl" />
+                <CountrySelect value={form.pays} onChange={(pays) => setForm({ ...form, pays })} />
               </div>
             </div>
             <div className="space-y-2">
