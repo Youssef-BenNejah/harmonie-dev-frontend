@@ -1,3 +1,4 @@
+import { CountrySelect } from "@/components/app/CountrySelect";
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -138,7 +139,7 @@ function MonEntreprise() {
             </div>
             <div className="space-y-2">
               <Label>Pays</Label>
-              <Input {...field("country")} className="rounded-xl" disabled={isLoading} />
+              <CountrySelect value={form.country ?? ""} onChange={(country) => setForm({ ...form, country })} disabled={isLoading} />
             </div>
             <div className="space-y-2">
               <Label>E-mail</Label>

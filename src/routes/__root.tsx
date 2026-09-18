@@ -1,3 +1,4 @@
+import "flag-icons/css/flag-icons.min.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   Outlet,

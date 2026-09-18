@@ -485,8 +485,14 @@ export const sparkB = [30, 26, 28, 22, 25, 18, 20, 16];
 export const sparkC = [4, 6, 5, 8, 9, 11, 12, 14];
 export const sparkD = [18, 14, 20, 17, 22, 19, 24, 21];
 
-export const formatMoney = (value: number, devise = "TND") =>
-  new Intl.NumberFormat("fr-FR", { style: "currency", currency: devise, maximumFractionDigits: 2 }).format(value);
+export const formatMoney = (value: number, devise = "TND") => {
+  try {
+    return new Intl.NumberFormat("fr-FR", { style: "currency", currency: devise, maximumFractionDigits: 2 }).format(value);
+  } catch {
+    // Non-ISO-4217 code (e.g. a hand-typed "Z") makes Intl throw and crash the whole page.
+    return `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(value)} ${devise}`;
+  }
+};
 
 export const formatDate = (iso: string) =>
   new Intl.DateTimeFormat("fr-FR", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(iso));
