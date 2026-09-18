@@ -45,7 +45,8 @@ export const Route = createFileRoute("/factures/nouvelle")({
 const documentTypes: InvoiceStatus[] = ["Facture", "Devis", "Bon de livraison"];
 
 type Line = { id: string; ref: string; article: string; description: string; quantity: number; price: number; taxId: string };
-const emptyLine = (): Line => ({ id: `l${Date.now()}${Math.random()}`, ref: "", article: "", description: "", quantity: 1, price: 0, taxId: "" });
+let lineSeq = 0;
+const emptyLine = (id?: string): Line => ({ id: id ?? `l${Date.now()}-${++lineSeq}`, ref: "", article: "", description: "", quantity: 1, price: 0, taxId: "" });
 
 function NouvelleFacture() {
   const { type, id } = Route.useSearch();
@@ -68,14 +69,15 @@ function NouvelleFacture() {
   const [status, setStatus] = useState<InvoiceStatus>("Facture");
   const [client, setClient] = useState("");
   const [devise, setDevise] = useState("");
-  const [date, setDate] = useState(new Date().toISOString().slice(0, 10));
+  const [date, setDate] = useState("");
+  useEffect(() => setDate((d) => d || new Date().toISOString().slice(0, 10)), []);
   const [expirationDate, setExpirationDate] = useState("");
   const [timbre, setTimbre] = useState(0);
   const [note, setNote] = useState("");
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [uploadingFile, setUploadingFile] = useState(false);
   const [importMontant, setImportMontant] = useState("");
-  const [items, setItems] = useState<Line[]>([emptyLine()]);
+  const [items, setItems] = useState<Line[]>([emptyLine("l-first")]);
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {

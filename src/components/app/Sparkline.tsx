@@ -9,11 +9,11 @@ export function Sparkline({
 }) {
   const w = 120;
   const h = 36;
-  const min = Math.min(...data);
-  const max = Math.max(...data);
+  const min = data.length ? Math.min(...data) : 0;
+  const max = data.length ? Math.max(...data) : 0;
   const span = max - min || 1;
   const points = data.map((v, i) => {
-    const x = (i / (data.length - 1)) * w;
+    const x = data.length > 1 ? (i / (data.length - 1)) * w : w / 2;
     const y = h - ((v - min) / span) * (h - 6) - 3;
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   });
