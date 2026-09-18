@@ -1,3 +1,4 @@
+import { CurrencySelect } from "@/components/app/CurrencySelect";
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -175,19 +176,23 @@ function Devise() {
             <SheetDescription>Code ISO, nom et symbole.</SheetDescription>
           </SheetHeader>
           <div className="mt-6 grid gap-4">
+            <div className="space-y-2">
+              <Label>Devise</Label>
+              <CurrencySelect value={form.code} onSelect={(c) => setForm({ code: c.code, name: c.name, symbol: c.symbol })} />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Code</Label>
-                <Input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })} className="rounded-xl" maxLength={3} />
+                <Input value={form.code} readOnly className="rounded-xl bg-muted/40" />
               </div>
               <div className="space-y-2">
                 <Label>Symbole</Label>
-                <Input value={form.symbol} onChange={(e) => setForm({ ...form, symbol: e.target.value })} className="rounded-xl" />
+                <Input value={form.symbol} readOnly className="rounded-xl bg-muted/40" />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Nom</Label>
-              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="rounded-xl" />
+              <Input value={form.name} readOnly className="rounded-xl bg-muted/40" />
             </div>
           </div>
           <SheetFooter className="mt-6">
@@ -197,7 +202,7 @@ function Devise() {
             <Button
               className="rounded-xl"
               onClick={save}
-              disabled={!form.code || !form.name || createMutation.isPending || updateMutation.isPending}
+              disabled={form.code.length !== 3 || !form.name || createMutation.isPending || updateMutation.isPending}
             >
               Enregistrer
             </Button>
